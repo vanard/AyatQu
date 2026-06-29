@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
                 val isOnboardingDone by viewModel.isOnboardingDone.collectAsStateWithLifecycle()
                 isOnboardingDone?.let {
                     AppNavGraph(
-                        isOnboardingDone = it,
+                        isOnboardingDone = false,
                         onOnboardingFinished = viewModel::completeOnboarding
                     )
                 }
