@@ -1,0 +1,8 @@
+# Copy this file to local.properties and fill in real values.
+# local.properties is git-ignored and must never be committed.
+
+# Android SDK path (set automatically by Android Studio)
+sdk.dir=/path/to/your/Android/sdk
+
+# API Keys
+QURAN_API_KEY=your_api_key_here
