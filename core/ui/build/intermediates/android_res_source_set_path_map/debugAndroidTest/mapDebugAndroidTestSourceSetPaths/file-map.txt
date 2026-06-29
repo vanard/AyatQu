@@ -1,5 +1,0 @@
-id.vanard.ayatqu.core.ui.test.ui-updated_navigation_xml-0 /Users/vanard/AndroidStudioProjects/Deenly/core/ui/build/generated/updated_navigation_xml/debugAndroidTest
-id.vanard.ayatqu.core.ui.test.ui-packageDebugAndroidTestResources-1 /Users/vanard/AndroidStudioProjects/Deenly/core/ui/build/intermediates/incremental/debugAndroidTest/packageDebugAndroidTestResources/merged.dir
-id.vanard.ayatqu.core.ui.test.ui-packageDebugAndroidTestResources-2 /Users/vanard/AndroidStudioProjects/Deenly/core/ui/build/intermediates/incremental/debugAndroidTest/packageDebugAndroidTestResources/stripped.dir
-id.vanard.ayatqu.core.ui.test.ui-debugAndroidTest-3 /Users/vanard/AndroidStudioProjects/Deenly/core/ui/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources
-gradleHome-0 /Users/vanard/.gradle
