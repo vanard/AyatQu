@@ -1,6 +1,5 @@
 package id.vanard.ayatqu.ui.navigation
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -9,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,6 +20,7 @@ import id.vanard.ayatqu.ui.screen.OnboardingScreen
 import id.vanard.ayatqu.ui.screen.ProfileScreen
 import id.vanard.ayatqu.ui.screen.QuranScreen
 import id.vanard.ayatqu.ui.screen.SignUpScreen
+import id.vanard.ayatqu.viewmodel.StartDestination
 
 private const val ROUTE_ONBOARDING = "onboarding"
 private const val ROUTE_LANDING    = "landing"
@@ -37,13 +36,21 @@ enum class BottomNavDestination(val label: String, val icon: Int) {
 
 @Composable
 fun AppNavGraph(
-    isOnboardingDone: Boolean,
+    startDestination: StartDestination,
     onOnboardingFinished: () -> Unit,
 ) {
     val navController = rememberNavController()
-    val startDestination = if (isOnboardingDone) ROUTE_LANDING else ROUTE_ONBOARDING
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    val initialRoute = when (startDestination) {
+        StartDestination.Onboarding -> ROUTE_ONBOARDING
+        StartDestination.Landing    -> ROUTE_LANDING
+        StartDestination.Home       -> ROUTE_MAIN
+        StartDestination.Loading    -> ROUTE_LANDING // unreachable — guarded in MainActivity
+    }
+
+    NavHost(navController = navController, startDestination = initialRoute) {
+
+        // ── Onboarding ────────────────────────────────────────────────────────
         composable(ROUTE_ONBOARDING) {
             OnboardingScreen(
                 onFinish = {
@@ -54,16 +61,20 @@ fun AppNavGraph(
                 }
             )
         }
+
+        // ── Landing ───────────────────────────────────────────────────────────
         composable(ROUTE_LANDING) {
             LandingScreen(
                 onLoginClick = { navController.navigate(ROUTE_LOGIN) },
                 onSignUpClick = { navController.navigate(ROUTE_SIGNUP) }
             )
         }
+
+        // ── Login ─────────────────────────────────────────────────────────────
         composable(ROUTE_LOGIN) {
             LoginScreen(
                 onBackClick = { navController.popBackStack() },
-                onLoginClick = { _, _ ->
+                onNavigateToHome = {
                     navController.navigate(ROUTE_MAIN) {
                         popUpTo(ROUTE_LANDING) { inclusive = true }
                     }
@@ -72,18 +83,15 @@ fun AppNavGraph(
                     navController.navigate(ROUTE_SIGNUP) {
                         popUpTo(ROUTE_LOGIN) { inclusive = true }
                     }
-                },
-                onGoogleClick = {
-                    navController.navigate(ROUTE_MAIN) {
-                        popUpTo(ROUTE_LANDING) { inclusive = true }
-                    }
                 }
             )
         }
+
+        // ── Sign Up ───────────────────────────────────────────────────────────
         composable(ROUTE_SIGNUP) {
             SignUpScreen(
                 onBackClick = { navController.popBackStack() },
-                onSignUpClick = { _, _ ->
+                onNavigateToHome = {
                     navController.navigate(ROUTE_MAIN) {
                         popUpTo(ROUTE_LANDING) { inclusive = true }
                     }
@@ -92,27 +100,27 @@ fun AppNavGraph(
                     navController.navigate(ROUTE_LOGIN) {
                         popUpTo(ROUTE_SIGNUP) { inclusive = true }
                     }
-                },
-                onGoogleClick = {
-                    navController.navigate(ROUTE_MAIN) {
-                        popUpTo(ROUTE_LANDING) { inclusive = true }
-                    }
-                },
-                onAppleClick = {
-                    navController.navigate(ROUTE_MAIN) {
-                        popUpTo(ROUTE_LANDING) { inclusive = true }
-                    }
                 }
             )
         }
+
+        // ── Main (bottom nav) ─────────────────────────────────────────────────
         composable(ROUTE_MAIN) {
-            MainScreen()
+            MainScreen(
+                onLogout = {
+                    navController.navigate(ROUTE_LANDING) {
+                        popUpTo(ROUTE_MAIN) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun MainScreen() {
+private fun MainScreen(
+    onLogout: () -> Unit = {},
+) {
     var current by rememberSaveable { mutableStateOf(BottomNavDestination.HOME) }
 
     NavigationSuiteScaffold(
@@ -128,9 +136,9 @@ private fun MainScreen() {
         }
     ) {
         when (current) {
-            BottomNavDestination.HOME -> HomeScreen()
-            BottomNavDestination.QURAN -> QuranScreen()
-            BottomNavDestination.PROFILE -> ProfileScreen()
+            BottomNavDestination.HOME    -> HomeScreen()
+            BottomNavDestination.QURAN   -> QuranScreen()
+            BottomNavDestination.PROFILE -> ProfileScreen(onLogout = onLogout)
         }
     }
 }

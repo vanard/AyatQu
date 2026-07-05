@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.ui.navigation.AppNavGraph
 import id.vanard.ayatqu.viewmodel.AppViewModel
+import id.vanard.ayatqu.viewmodel.StartDestination
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
@@ -20,18 +21,19 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        // Hold splash until we know onboarding state
+        // Hold splash screen until the start destination is resolved
         splashScreen.setKeepOnScreenCondition {
-            viewModel.isOnboardingDone.value == null
+            viewModel.startDestination.value == StartDestination.Loading
         }
 
         enableEdgeToEdge()
         setContent {
             AyatQuTheme {
-                val isOnboardingDone by viewModel.isOnboardingDone.collectAsStateWithLifecycle()
-                isOnboardingDone?.let {
+                val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+
+                if (startDestination != StartDestination.Loading) {
                     AppNavGraph(
-                        isOnboardingDone = false,
+                        startDestination = startDestination,
                         onOnboardingFinished = viewModel::completeOnboarding
                     )
                 }
