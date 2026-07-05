@@ -6,13 +6,20 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
-kotlin = "2.2.10"
-composeBom = "2025.12.00"
-koin = "4.0.4"
-workManager = "2.10.1"
-splashScreen = "1.0.1"
-navigationCompose = "2.9.0"
-datastorePreferences = "1.1.7"
+kotlin = "2.2.20"
+composeBom = "2026.06.01"
+koin = "4.2.2"
+workManager = "2.11.2"
+splashScreen = "1.2.0"
+navigationCompose = "2.9.8"
+datastorePreferences = "1.2.1"
+firebaseBom = "34.15.0"
+googleServices = "4.5.0"
+credentialManager = "1.6.0"
+googleIdentity = "1.2.0"
+retrofitBom = "3.0.0"
+gson = "2.14.0"
+okhttp = "5.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +39,7 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material3-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
+androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
@@ -45,8 +53,23 @@ android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", ver
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-compose-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
 
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentialManager" }
+androidx-credentials-play = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialManager" }
+google-identity = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleIdentity" }
+retrofit-bom = { group = "com.squareup.retrofit2", name = "retrofit-bom", version.ref = "retrofitBom" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofitBom" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofitBom" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 

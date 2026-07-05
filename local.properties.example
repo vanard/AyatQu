@@ -4,5 +4,7 @@
 # Android SDK path (set automatically by Android Studio)
 sdk.dir=/path/to/your/Android/sdk
 
-# API Keys
-QURAN_API_KEY=your_api_key_here
+# UmmahAPI — https://ummahapi.com/register
+# Used for Quran verses, translation, audio, etc.
+QURAN_API_KEY=your_ummahapi_key_here
+QURAN_BASE_URL=https://ummahapi.com/api/v1/
