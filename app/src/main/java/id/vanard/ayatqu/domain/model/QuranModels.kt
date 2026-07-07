@@ -26,3 +26,15 @@ data class AyahAudio(
     val surahAudioUrl: String,
     val ayahAudioUrl: String?,
 )
+
+data class LastRead(
+    val surahNumber: Int,
+    val ayahNumber: Int,
+    val surahName: String,
+    val timestamp: Long = 0L,
+)
+
+data class PrayerTime(
+    val name: String,
+    val time: String,
+)

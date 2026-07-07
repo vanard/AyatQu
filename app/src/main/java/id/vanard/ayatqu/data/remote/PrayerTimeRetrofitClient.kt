@@ -5,25 +5,16 @@ import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.chuckerteam.chucker.api.RetentionManager
 import id.vanard.ayatqu.BuildConfig
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object QuranRetrofitClient {
+object PrayerTimeRetrofitClient {
 
-    fun create(context: Context): QuranApiService {
-        // Header interceptor — injects API key
-        val authInterceptor = Interceptor { chain ->
-            val request = chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer ${BuildConfig.QURAN_API_KEY}")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .build()
-            chain.proceed(request)
-        }
+    private const val BASE_URL = "https://api.aladhan.com/v1/"
 
+    fun create(context: Context): PrayerTimeApiService {
         // Logging interceptor
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
@@ -45,7 +36,6 @@ object QuranRetrofitClient {
             .build()
 
         val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(chuckerInterceptor)
@@ -55,10 +45,10 @@ object QuranRetrofitClient {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.QURAN_BASE_URL)
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(QuranApiService::class.java)
+            .create(PrayerTimeApiService::class.java)
     }
 }
