@@ -19,7 +19,7 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "QURAN_API_KEY", "\"${localProps["QURAN_API_KEY"] ?: ""}\"")
-        buildConfigField("String", "QURAN_BASE_URL", "\"${localProps["QURAN_BASE_URL"] ?: "https://ummahapi.com/api/v1/"}\"")
+        buildConfigField("String", "QURAN_BASE_URL", "\"${localProps["QURAN_BASE_URL"] ?: "https://ummahapi.com/api/"}\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProps["GOOGLE_WEB_CLIENT_ID"] ?: ""}\"")
     }
 
@@ -40,7 +40,9 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
-    implementation(libs.androidx.compose.material.icons.extended)
+
+    // Icons: local PhosphorIcons.kt (https://phosphoricons.com) — no 3rd-party icon lib
+
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -66,12 +68,19 @@ dependencies {
     implementation(libs.androidx.credentials.play)
     implementation(libs.google.identity)
 
+    // Google Play Services Location
+    implementation(libs.play.services.location)
+
     // Retrofit 3 + OkHttp 5 — versions managed by BOM
     implementation(platform(libs.retrofit.bom))
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
+
+    // Chucker — HTTP inspector (debug only)
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chucker.no.op)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
