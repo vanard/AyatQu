@@ -1,12 +1,25 @@
 package id.vanard.ayatqu.di
 
 import com.google.firebase.auth.FirebaseAuth
+import id.vanard.ayatqu.data.LastReadPreference
 import id.vanard.ayatqu.data.OnboardingPreference
+import id.vanard.ayatqu.data.remote.PrayerTimeApiService
+import id.vanard.ayatqu.data.remote.PrayerTimeRetrofitClient
+import id.vanard.ayatqu.data.remote.QuranApiService
+import id.vanard.ayatqu.data.remote.QuranRetrofitClient
 import id.vanard.ayatqu.data.repository.FirebaseAuthRepository
+import id.vanard.ayatqu.data.repository.PrayerTimeRepositoryImpl
+import id.vanard.ayatqu.data.repository.QuranRepositoryImpl
 import id.vanard.ayatqu.domain.repository.AuthRepository
+import id.vanard.ayatqu.domain.repository.PrayerTimeRepository
+import id.vanard.ayatqu.domain.repository.QuranRepository
 import id.vanard.ayatqu.domain.usecase.AuthUseCase
+import id.vanard.ayatqu.util.LocationHelper
+import id.vanard.ayatqu.util.NetworkUtils
 import id.vanard.ayatqu.viewmodel.AppViewModel
 import id.vanard.ayatqu.viewmodel.AuthViewModel
+import id.vanard.ayatqu.viewmodel.HomeViewModel
+import id.vanard.ayatqu.viewmodel.QuranViewModel
 import id.vanard.ayatqu.worker.QuranDownloadWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.workmanager.dsl.workerOf
@@ -18,12 +31,21 @@ import org.koin.dsl.module
 val appModule = module {
     // Preferences
     single { OnboardingPreference(androidContext()) }
+    single { LastReadPreference(androidContext()) }
 
     // Firebase
     single { FirebaseAuth.getInstance() }
 
-    // Repository
+    // Utils
+    single { NetworkUtils(androidContext()) }
+    single { LocationHelper(androidContext()) }
+    single { QuranRetrofitClient.create(androidContext()) } bind QuranApiService::class
+    single { PrayerTimeRetrofitClient.create(androidContext()) } bind PrayerTimeApiService::class
+
+    // Repositories
     singleOf(::FirebaseAuthRepository) bind AuthRepository::class
+    singleOf(::QuranRepositoryImpl) bind QuranRepository::class
+    singleOf(::PrayerTimeRepositoryImpl) bind PrayerTimeRepository::class
 
     // Use cases
     singleOf(::AuthUseCase)
@@ -31,6 +53,8 @@ val appModule = module {
     // ViewModels
     viewModelOf(::AppViewModel)
     viewModelOf(::AuthViewModel)
+    viewModelOf(::HomeViewModel)
+    viewModelOf(::QuranViewModel)
 
     // Workers
     workerOf(::QuranDownloadWorker)

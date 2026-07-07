@@ -1,5 +1,7 @@
 package id.vanard.ayatqu.ui.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,125 +17,133 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
+import id.vanard.ayatqu.domain.model.LastRead
+import id.vanard.ayatqu.domain.model.PrayerTime
+import id.vanard.ayatqu.ui.icons.Moon
+import id.vanard.ayatqu.util.LocationHelper
+import id.vanard.ayatqu.viewmodel.HomeUiState
+import id.vanard.ayatqu.viewmodel.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
+private val ColorPrimary      = Color(0xFF2D6B8C)
 private val ColorTextPrimary  = Color(0xFF2D2D2D)
 private val ColorGold         = Color(0xFFC19A6B)
 private val ColorMuted        = Color(0xFF8E8E93)
 private val ColorBorder       = Color(0xFFF9FAFB)
-private val ColorTabBg        = Color(0x80F0E6D2)  // 50% opacity
 private val ColorCardGradient = listOf(Color(0xFFF5E6CC), Color(0xFFF8F1E4), Color(0xFFFFFFFF))
 private val ColorCardBorder   = Color(0xFFEBE3D5)
+private val ColorBgSubtle     = Color(0xFFF7F9FB)
+private val ColorSurface      = Color(0xFFFFFFFF)
+private val ColorDivider      = Color(0xFFF0F2F5)
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-private data class SurahItem(
-    val number: Int,
-    val latinName: String,
-    val arabicName: String,
-    val ayahCount: Int,
-)
-
-private val mockSurahs = listOf(
-    SurahItem(1,  "Al Fatihah",  "الفاتحة", 7),
-    SurahItem(2,  "Al Baqarah",  "البقرة",  286),
-    SurahItem(3,  "Ali Imran",   "آل عمران", 200),
-    SurahItem(4,  "An Nisa",     "النساء",   176),
-    SurahItem(5,  "Al Maidah",   "المائدة",  120),
-    SurahItem(6,  "Al An'am",    "الأنعام",  165),
-    SurahItem(7,  "Al A'raf",    "الأعراف",  206),
-    SurahItem(8,  "Al Anfal",    "الأنفال",  75),
-    SurahItem(9,  "At Taubah",   "التوبة",   129),
-    SurahItem(10, "Yunus",       "يونس",     109),
-)
-
-private val tabs = listOf("Surah", "Juz", "Page")
+// ── Public composable ─────────────────────────────────────────────────────────
 
 @Composable
 fun HomeScreen(
-    onSurahClick: (Int) -> Unit = {},
+    viewModel: HomeViewModel = koinViewModel(),
+    onLastReadClick: (surahNumber: Int, ayahNumber: Int) -> Unit = { _, _ -> },
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val state by viewModel.uiState.collectAsState()
+    val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
+    val context = LocalContext.current
 
+    // Location permission launcher — requests once when permission is not granted
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { permissions ->
+        val granted = permissions.values.any { it }
+        if (granted) {
+            viewModel.loadPrayerTimesWithLocation()
+        } else {
+            // Permission denied — fall back to default city
+            viewModel.loadPrayerTimesWithLocation()
+        }
+    }
+
+    // Request location permission on first composition
+    LaunchedEffect(Unit) {
+        if (LocationHelper.isLocationPermissionGranted(context)) {
+            viewModel.loadPrayerTimesWithLocation()
+        } else {
+            locationPermissionLauncher.launch(LocationHelper.getLocationPermissions())
+        }
+    }
+
+    HomeScreenContent(
+        state = state,
+        isNetworkAvailable = isNetworkAvailable,
+        onLastReadClick = onLastReadClick,
+        onRetry = viewModel::retryPrayerTimes,
+    )
+}
+
+// ── Internal content (previewable) ────────────────────────────────────────────
+
+@Composable
+internal fun HomeScreenContent(
+    state: HomeUiState,
+    isNetworkAvailable: Boolean = true,
+    onLastReadClick: (surahNumber: Int, ayahNumber: Int) -> Unit = { _, _ -> },
+    onRetry: () -> Unit = {},
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(ColorBgSubtle)
             .statusBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
     ) {
         // ── Header ────────────────────────────────────────────────────────────
         HomeHeader()
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-        ) {
-            // ── Last Read Card ────────────────────────────────────────────────
-            item {
-                Spacer(Modifier.height(12.dp))
-                LastReadCard(
-                    surahName = "Al-Fatihah",
-                    ayahNumber = 1
-                )
-                Spacer(Modifier.height(24.dp))
-            }
+        Spacer(Modifier.height(12.dp))
 
-            // ── Al Quran section header + tabs ────────────────────────────────
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Al Quran",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorTextPrimary
-                    )
-                    SurahTabRow(
-                        tabs = tabs,
-                        selected = selectedTab,
-                        onTabSelected = { selectedTab = it }
-                    )
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-
-            // ── Surah list ────────────────────────────────────────────────────
-            items(mockSurahs) { surah ->
-                SurahListItem(
-                    surah = surah,
-                    onClick = { onSurahClick(surah.number) }
-                )
-                HorizontalDivider(color = ColorBorder, thickness = 1.dp)
-            }
-
-            item { Spacer(Modifier.height(24.dp)) }
+        // ── Last Read Card ────────────────────────────────────────────────────
+        if (state.lastRead != null) {
+            LastReadCard(
+                lastRead = state.lastRead,
+                onClick = {
+                    onLastReadClick(state.lastRead.surahNumber, state.lastRead.ayahNumber)
+                },
+            )
+            Spacer(Modifier.height(24.dp))
         }
+
+        // ── Prayer Times Section ──────────────────────────────────────────────
+        PrayerTimesSection(
+            prayerTimes = state.prayerTimes,
+            isLoading = state.isPrayerTimesLoading,
+            error = state.prayerTimesError,
+            isNetworkAvailable = isNetworkAvailable,
+            locationLabel = state.locationLabel,
+            onRetry = onRetry,
+        )
+
+        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -144,24 +154,20 @@ private fun HomeHeader() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(96.dp)
-            .padding(horizontal = 24.dp),
+            .height(96.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Menu icon
         IconPlaceholder(size = 32)
 
-        // Title
         Text(
             text = "QURAN",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = ColorTextPrimary,
-            letterSpacing = 1.8.sp
+            letterSpacing = 1.8.sp,
         )
 
-        // Search icon
         IconPlaceholder(size = 32)
     }
 }
@@ -169,194 +175,323 @@ private fun HomeHeader() {
 // ── Last Read Card ────────────────────────────────────────────────────────────
 
 @Composable
-private fun LastReadCard(surahName: String, ayahNumber: Int) {
+private fun LastReadCard(
+    lastRead: LastRead,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(126.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(Brush.linearGradient(ColorCardGradient))
             .border(1.dp, ColorCardBorder, RoundedCornerShape(24.dp))
-            .padding(horizontal = 25.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 25.dp, vertical = 20.dp),
     ) {
         // Decorative mosque silhouette placeholder — right side
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .size(width = 160.dp, height = 110.dp)
+                .size(width = 160.dp, height = 100.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(ColorGold.copy(alpha = 0.08f)),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
-            Text("🕌", fontSize = 48.sp) // TODO: replace with actual mosque SVG asset
+            Text("🕌", fontSize = 48.sp)
         }
 
         // Text content
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(vertical = 20.dp)
+                .padding(end = 120.dp),
         ) {
             Text(
                 text = "Last Read",
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorGold
+                color = ColorGold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = surahName,
-                fontSize = 24.sp,
+                text = lastRead.surahName,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = ColorTextPrimary
+                color = ColorTextPrimary,
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = "AYAH NO: $ayahNumber",
+                text = "AYAH NO: ${lastRead.ayahNumber}",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = ColorMuted,
-                letterSpacing = 0.6.sp
+                letterSpacing = 0.6.sp,
             )
         }
     }
 }
 
-// ── Surah / Juz / Page tab row ────────────────────────────────────────────────
+// ── Prayer Times Section ──────────────────────────────────────────────────────
 
 @Composable
-private fun SurahTabRow(
-    tabs: List<String>,
-    selected: Int,
-    onTabSelected: (Int) -> Unit,
+private fun PrayerTimesSection(
+    prayerTimes: List<PrayerTime>,
+    isLoading: Boolean,
+    error: String?,
+    isNetworkAvailable: Boolean,
+    locationLabel: String,
+    onRetry: () -> Unit,
 ) {
+    // Section header
     Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(ColorTabBg)
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        tabs.forEachIndexed { index, label ->
-            val isSelected = index == selected
+        Icon(
+            imageVector = Moon,
+            contentDescription = null,
+            tint = ColorGold,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "Prayer Times",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = ColorTextPrimary,
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = locationLabel,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = ColorMuted,
+        )
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    // Content
+    when {
+        !isNetworkAvailable && prayerTimes.isEmpty() -> {
+            PrayerTimesErrorCard(
+                message = "No internet connection",
+                onRetry = onRetry,
+            )
+        }
+        isLoading && prayerTimes.isEmpty() -> {
             Box(
                 modifier = Modifier
-                    .clip(CircleShape)
-                    .background(if (isSelected) Color.White else Color.Transparent)
-                    .clickable { onTabSelected(index) }
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = label,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isSelected) ColorGold else ColorMuted
+                CircularProgressIndicator(
+                    color = ColorGold,
+                    modifier = Modifier.size(32.dp),
                 )
+            }
+        }
+        error != null && prayerTimes.isEmpty() -> {
+            PrayerTimesErrorCard(
+                message = error,
+                onRetry = onRetry,
+            )
+        }
+        prayerTimes.isNotEmpty() -> {
+            PrayerTimesCard(prayerTimes = prayerTimes)
+        }
+    }
+}
+
+@Composable
+private fun PrayerTimesCard(prayerTimes: List<PrayerTime>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(ColorSurface)
+            .border(1.dp, ColorDivider, RoundedCornerShape(20.dp))
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+    ) {
+        prayerTimes.forEachIndexed { index, prayer ->
+            PrayerTimeRow(
+                name = prayer.name,
+                time = prayer.time,
+                isNext = index == findNextPrayerIndex(prayerTimes),
+            )
+            if (index < prayerTimes.lastIndex) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp),
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(0.5.dp)
+                            .background(ColorDivider),
+                    )
+                }
             }
         }
     }
 }
 
-// ── Surah list item ───────────────────────────────────────────────────────────
-
 @Composable
-private fun SurahListItem(surah: SurahItem, onClick: () -> Unit) {
+private fun PrayerTimeRow(
+    name: String,
+    time: String,
+    isNext: Boolean,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(74.dp)
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Number badge
-        SurahNumberBadge(number = surah.number)
-
-        Spacer(Modifier.width(16.dp))
-
-        // Latin name + ayah count
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = surah.latinName,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ColorTextPrimary
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = "${surah.ayahCount} AYAHS",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                color = ColorMuted,
-                letterSpacing = (-0.5).sp
-            )
-        }
-
-        // Arabic name
         Text(
-            text = surah.arabicName,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Normal,
-            color = ColorGold,
-            textAlign = TextAlign.End
+            text = name,
+            fontSize = 15.sp,
+            fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
+            color = if (isNext) ColorPrimary else ColorTextPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = time,
+            fontSize = 15.sp,
+            fontWeight = if (isNext) FontWeight.Bold else FontWeight.SemiBold,
+            color = if (isNext) ColorPrimary else ColorTextPrimary,
         )
     }
 }
 
-// ── Surah number badge ────────────────────────────────────────────────────────
-
 @Composable
-private fun SurahNumberBadge(number: Int) {
-    Box(
-        modifier = Modifier.size(40.dp),
-        contentAlignment = Alignment.Center
+private fun PrayerTimesErrorCard(
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(ColorSurface)
+            .border(1.dp, ColorDivider, RoundedCornerShape(20.dp))
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Octagon-ish background — using a circle as placeholder
-        // TODO: replace with actual diamond/octagon SVG asset from Figma
+        Text(
+            text = message,
+            fontSize = 14.sp,
+            color = ColorMuted,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(12.dp))
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(ColorGold.copy(alpha = 0.10f)),
-            contentAlignment = Alignment.Center
+                .clip(RoundedCornerShape(10.dp))
+                .background(ColorGold)
+                .clickable(onClick = onRetry)
+                .padding(horizontal = 20.dp, vertical = 8.dp),
         ) {
             Text(
-                text = number.toString().padStart(2, '0'),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = ColorTextPrimary
+                text = "Retry",
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
 }
 
-// ── Icon placeholder ──────────────────────────────────────────────────────────
+/**
+ * Finds the index of the next upcoming prayer based on current time.
+ * Returns 0 if all prayers have passed for the day.
+ */
+private fun findNextPrayerIndex(prayerTimes: List<PrayerTime>): Int {
+    val now = java.util.Calendar.getInstance()
+    val currentMinutes = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
+
+    prayerTimes.forEachIndexed { index, prayer ->
+        val parts = prayer.time.split(":")
+        if (parts.size == 2) {
+            val prayerMinutes = (parts[0].toIntOrNull() ?: 0) * 60 + (parts[1].toIntOrNull() ?: 0)
+            if (prayerMinutes > currentMinutes) return index
+        }
+    }
+    return 0 // Default to first prayer if all passed
+}
+
+// ── Icon placeholder ───────────────────────────────────────────���──────────────
 
 @Composable
 private fun IconPlaceholder(size: Int) {
-    // TODO: replace with actual SVG icon assets
     Box(
         modifier = Modifier
             .size(size.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(ColorBorder)
+            .background(ColorBorder),
     )
 }
 
 // ── Previews ──────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, name = "Home - Light")
+private val samplePrayerTimes = listOf(
+    PrayerTime("Fajr", "04:32"),
+    PrayerTime("Sunrise", "05:58"),
+    PrayerTime("Dhuhr", "12:05"),
+    PrayerTime("Asr", "15:28"),
+    PrayerTime("Maghrib", "18:12"),
+    PrayerTime("Isha", "19:24"),
+)
+
+@Preview(showBackground = true, name = "Home - With Last Read & Prayer Times")
 @Composable
-private fun PreviewHomeLight() {
+private fun PreviewHomeFull() {
     AyatQuTheme(darkTheme = false) {
-        HomeScreen()
+        HomeScreenContent(
+            state = HomeUiState(
+                lastRead = LastRead(
+                    surahNumber = 2,
+                    ayahNumber = 255,
+                    surahName = "Al-Baqarah",
+                ),
+                prayerTimes = samplePrayerTimes,
+                locationLabel = "Jakarta",
+            ),
+        )
     }
 }
 
-@Preview(showBackground = true, name = "Home - Dark")
+@Preview(showBackground = true, name = "Home - No Last Read")
 @Composable
-private fun PreviewHomeDark() {
-    AyatQuTheme(darkTheme = true) {
-        HomeScreen()
+private fun PreviewHomeNoLastRead() {
+    AyatQuTheme(darkTheme = false) {
+        HomeScreenContent(
+            state = HomeUiState(
+                prayerTimes = samplePrayerTimes,
+                locationLabel = "Jakarta",
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home - Loading Prayer Times")
+@Composable
+private fun PreviewHomeLoading() {
+    AyatQuTheme(darkTheme = false) {
+        HomeScreenContent(
+            state = HomeUiState(isPrayerTimesLoading = true),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home - Prayer Times Error")
+@Composable
+private fun PreviewHomeError() {
+    AyatQuTheme(darkTheme = false) {
+        HomeScreenContent(
+            state = HomeUiState(prayerTimesError = "Failed to load prayer times"),
+        )
     }
 }
