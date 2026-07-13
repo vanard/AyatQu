@@ -3,6 +3,8 @@ package id.vanard.ayatqu.di
 import com.google.firebase.auth.FirebaseAuth
 import id.vanard.ayatqu.data.LastReadPreference
 import id.vanard.ayatqu.data.OnboardingPreference
+import id.vanard.ayatqu.data.PrayerTimeCache
+import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.data.remote.PrayerTimeApiService
 import id.vanard.ayatqu.data.remote.PrayerTimeRetrofitClient
 import id.vanard.ayatqu.data.remote.QuranApiService
@@ -29,9 +31,11 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
-    // Preferences
+    // Preferences & Cache
     single { OnboardingPreference(androidContext()) }
     single { LastReadPreference(androidContext()) }
+    single { SurahLocalCache(androidContext()) }
+    single { PrayerTimeCache(androidContext()) }
 
     // Firebase
     single { FirebaseAuth.getInstance() }
