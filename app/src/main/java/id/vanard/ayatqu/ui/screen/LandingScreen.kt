@@ -1,6 +1,7 @@
 package id.vanard.ayatqu.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,7 @@ import id.vanard.ayatqu.core.ui.theme.TextHint
 fun LandingScreen(
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit,
+    onSkipClick: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -77,14 +79,14 @@ fun LandingScreen(
         // ── Foreground content ────────────────────────────────────────────────
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // Logo + headline area — pushes bottom sheet down
-            Column(
+            // Top bar with logo and skip button
+            Row(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 32.dp),
-                verticalArrangement = Arrangement.Center,
+                    .padding(horizontal = 32.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Logo
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -106,7 +108,27 @@ fun LandingScreen(
                     )
                 }
 
-                Spacer(Modifier.height(60.dp))
+                // Skip button
+                Text(
+                    text = "Skip",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier
+                        .clickable(onClick = onSkipClick)
+                        .padding(8.dp)
+                )
+            }
+
+            // Headline area
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Spacer(Modifier.height(20.dp))
 
                 // Headline
                 Text(
@@ -198,7 +220,7 @@ fun LandingScreen(
 @Composable
 private fun PreviewLandingDark() {
     AyatQuTheme(darkTheme = true) {
-        LandingScreen(onLoginClick = {}, onSignUpClick = {})
+        LandingScreen(onLoginClick = {}, onSignUpClick = {}, onSkipClick = {})
     }
 }
 
@@ -206,6 +228,6 @@ private fun PreviewLandingDark() {
 @Composable
 private fun PreviewLandingLight() {
     AyatQuTheme(darkTheme = false) {
-        LandingScreen(onLoginClick = {}, onSignUpClick = {})
+        LandingScreen(onLoginClick = {}, onSignUpClick = {}, onSkipClick = {})
     }
 }
