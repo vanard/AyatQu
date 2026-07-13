@@ -112,7 +112,12 @@ fun AppNavGraph(
         composable(ROUTE_LANDING) {
             LandingScreen(
                 onLoginClick = { navController.navigate(ROUTE_LOGIN) },
-                onSignUpClick = { navController.navigate(ROUTE_SIGNUP) }
+                onSignUpClick = { navController.navigate(ROUTE_SIGNUP) },
+                onSkipClick = {
+                    navController.navigate(ROUTE_MAIN) {
+                        popUpTo(ROUTE_LANDING) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -122,7 +127,7 @@ fun AppNavGraph(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToHome = {
                     navController.navigate(ROUTE_MAIN) {
-                        popUpTo(ROUTE_LANDING) { inclusive = true }
+                        popUpTo(ROUTE_MAIN) { inclusive = true }
                     }
                 },
                 onSignUpClick = {
@@ -139,7 +144,7 @@ fun AppNavGraph(
                 onBackClick = { navController.popBackStack() },
                 onNavigateToHome = {
                     navController.navigate(ROUTE_MAIN) {
-                        popUpTo(ROUTE_LANDING) { inclusive = true }
+                        popUpTo(ROUTE_MAIN) { inclusive = true }
                     }
                 },
                 onLoginClick = {
@@ -157,7 +162,9 @@ fun AppNavGraph(
                     navController.navigate(ROUTE_LANDING) {
                         popUpTo(ROUTE_MAIN) { inclusive = true }
                     }
-                }
+                },
+                onLoginClick = { navController.navigate(ROUTE_LOGIN) },
+                onSignUpClick = { navController.navigate(ROUTE_SIGNUP) },
             )
         }
     }
@@ -168,6 +175,8 @@ fun AppNavGraph(
 @Composable
 private fun MainScreen(
     onLogout: () -> Unit = {},
+    onLoginClick: () -> Unit = {},
+    onSignUpClick: () -> Unit = {},
 ) {
     var current by rememberSaveable { mutableStateOf(BottomNavDestination.HOME) }
 
@@ -176,7 +185,11 @@ private fun MainScreen(
             when (current) {
                 BottomNavDestination.HOME    -> HomeScreen()
                 BottomNavDestination.QURAN   -> QuranScreen()
-                BottomNavDestination.PROFILE -> ProfileScreen(onLogout = onLogout)
+                BottomNavDestination.PROFILE -> ProfileScreen(
+                    onLogout = onLogout,
+                    onLoginClick = onLoginClick,
+                    onSignUpClick = onSignUpClick,
+                )
             }
         }
 

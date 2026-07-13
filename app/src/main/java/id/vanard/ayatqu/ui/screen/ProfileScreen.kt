@@ -24,6 +24,7 @@ import id.vanard.ayatqu.ui.icons.Info
 import id.vanard.ayatqu.ui.icons.Moon
 import id.vanard.ayatqu.ui.icons.SignOut
 import id.vanard.ayatqu.ui.icons.Star
+import id.vanard.ayatqu.ui.icons.Trash
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,9 +49,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
+import id.vanard.ayatqu.data.PrayerTimeCache
+import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.viewmodel.AuthViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 private val ProfileAvatarBg      = Color(0xFF2D6B8C)
@@ -66,33 +75,47 @@ private val LogoutRed            = Color(0xFFE53E3E)
 fun ProfileScreen(
     viewModel: AuthViewModel = koinViewModel(),
     onLogout: () -> Unit = {},
+    onLoginClick: () -> Unit = {},
+    onSignUpClick: () -> Unit = {},
 ) {
     val authState by viewModel.uiState.collectAsState()
     val firebaseUser = authState.user
-    val displayName = firebaseUser?.displayName
-        ?: firebaseUser?.email?.substringBefore("@")
-        ?: "User"
+    val isLoggedIn = firebaseUser != null
+    val displayName = firebaseUser?.displayName.orEmpty().ifEmpty {
+        firebaseUser?.email?.substringBefore("@").orEmpty().ifEmpty { "Guest" }
+    }
     val email = firebaseUser?.email ?: ""
 
     ProfileScreenContent(
+        isLoggedIn = isLoggedIn,
         displayName = displayName,
         email = email,
         onLogout = {
             viewModel.signOut()
             onLogout()
         },
+        onLoginClick = onLoginClick,
+        onSignUpClick = onSignUpClick,
     )
 }
 
 @Composable
 internal fun ProfileScreenContent(
+    isLoggedIn: Boolean,
     displayName: String,
     email: String,
     onLogout: () -> Unit = {},
+    onLoginClick: () -> Unit = {},
+    onSignUpClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val prayerTimeCache: PrayerTimeCache = koinInject()
+    val surahLocalCache: SurahLocalCache = koinInject()
+    
     var notificationsEnabled by remember { mutableStateOf(false) }
     var darkModeEnabled by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showClearCacheDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -101,9 +124,13 @@ internal fun ProfileScreenContent(
             .verticalScroll(rememberScrollState())
     ) {
         // ── Profile header ────────────────────────────────────────────────────
-        ProfileHeader(displayName, email)
-
-        Spacer(Modifier.height(24.dp))
+        if (isLoggedIn) {
+            ProfileHeader(displayName, email)
+            Spacer(Modifier.height(24.dp))
+        } else {
+            GuestHeader(onLoginClick = onLoginClick, onSignUpClick = onSignUpClick)
+            Spacer(Modifier.height(24.dp))
+        }
 
         // ── Settings section ──────────────────────────────────────────────────
         SectionLabel("Settings")
@@ -113,7 +140,8 @@ internal fun ProfileScreenContent(
             title = "Notifications",
             subtitle = "Daily reminders & alerts",
             checked = notificationsEnabled,
-            onCheckedChange = { notificationsEnabled = it }
+            onCheckedChange = { notificationsEnabled = it },
+            enabled = false,
         )
 
         MenuDivider()
@@ -123,7 +151,8 @@ internal fun ProfileScreenContent(
             title = "Theme",
             subtitle = if (darkModeEnabled) "Dark mode" else "Light mode",
             checked = darkModeEnabled,
-            onCheckedChange = { darkModeEnabled = it }
+            onCheckedChange = { darkModeEnabled = it },
+            enabled = false,
         )
 
         MenuDivider()
@@ -158,12 +187,23 @@ internal fun ProfileScreenContent(
 
         MenuDivider()
 
-        MenuActionItem(
-            icon = SignOut,
-            title = "Logout",
-            tint = LogoutRed,
-            onClick = { showLogoutDialog = true },
+        MenuNavigationItem(
+            icon = Trash,
+            title = "Clear Cache",
+            subtitle = "Free up storage space",
+            onClick = { showClearCacheDialog = true }
         )
+
+        MenuDivider()
+
+        if (isLoggedIn) {
+            MenuActionItem(
+                icon = SignOut,
+                title = "Logout",
+                tint = LogoutRed,
+                onClick = { showLogoutDialog = true },
+            )
+        }
 
         Spacer(Modifier.height(32.dp))
     }
@@ -175,6 +215,22 @@ internal fun ProfileScreenContent(
                 onLogout()
             },
             onDismiss = { showLogoutDialog = false },
+        )
+    }
+
+    if (showClearCacheDialog) {
+        ClearCacheConfirmationDialog(
+            onConfirm = {
+                showClearCacheDialog = false
+                CoroutineScope(Dispatchers.IO).launch {
+                    prayerTimeCache.clearCache()
+                    surahLocalCache.clear()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast.makeText(context, "Cache cleared successfully", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onDismiss = { showClearCacheDialog = false },
         )
     }
 }
@@ -208,6 +264,54 @@ private fun LogoutConfirmationDialog(
             ) {
                 Text(
                     text = "Logout",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Cancel",
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun ClearCacheConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Clear Cache?",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+        },
+        text = {
+            Text(
+                text = "This will clear cached prayer times and surah data. The app will re-download data when needed.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = SectionLabelColor,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ProfileAvatarBg,
+                ),
+            ) {
+                Text(
+                    text = "Clear",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                 )
@@ -276,6 +380,97 @@ private fun ProfileHeader(displayName: String, email: String) {
     }
 }
 
+// ── Guest header (not logged in) ──────────────────────────────────────────────
+
+@Composable
+private fun GuestHeader(
+    onLoginClick: () -> Unit,
+    onSignUpClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 32.dp, bottom = 8.dp, start = 20.dp, end = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Guest avatar
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFE0E0E0)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = id.vanard.ayatqu.ui.icons.UserCircle,
+                contentDescription = null,
+                tint = SectionLabelColor,
+                modifier = Modifier.size(56.dp),
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            text = "Welcome, Guest",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = "Sign in to sync your progress across devices",
+            style = MaterialTheme.typography.bodyMedium,
+            color = SectionLabelColor,
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        // Sign In button
+        androidx.compose.material3.Button(
+            onClick = onLoginClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ProfileAvatarBg,
+                contentColor = Color.White,
+            ),
+        ) {
+            Text(
+                text = "Sign In",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // Sign Up button
+        androidx.compose.material3.OutlinedButton(
+            onClick = onSignUpClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = ProfileAvatarBg,
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, ProfileAvatarBg),
+        ) {
+            Text(
+                text = "Create Account",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
 // ── Section label ─────────────────────────────────────────────────────────────
 
 @Composable
@@ -299,18 +494,19 @@ private fun MenuToggleItem(
     subtitle: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = MenuIconTint,
+            tint = if (enabled) MenuIconTint else MenuIconTint.copy(alpha = 0.4f),
             modifier = Modifier.size(24.dp),
         )
         Spacer(Modifier.width(16.dp))
@@ -318,22 +514,28 @@ private fun MenuToggleItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = if (enabled) MaterialTheme.colorScheme.onBackground
+                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = SectionLabelColor,
+                color = if (enabled) SectionLabelColor else SectionLabelColor.copy(alpha = 0.4f),
             )
         }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = MenuIconTint,
                 uncheckedThumbColor = Color.White,
                 uncheckedTrackColor = Color(0xFFD1D5DB),
+                disabledCheckedThumbColor = Color.White.copy(alpha = 0.4f),
+                disabledCheckedTrackColor = MenuIconTint.copy(alpha = 0.4f),
+                disabledUncheckedThumbColor = Color.White.copy(alpha = 0.4f),
+                disabledUncheckedTrackColor = Color(0xFFD1D5DB).copy(alpha = 0.4f),
             ),
         )
     }
@@ -421,24 +623,38 @@ private fun MenuDivider() {
 
 // ── Previews ──────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, name = "Light")
+@Preview(showBackground = true, name = "Light - Logged In")
 @Composable
 private fun ProfileScreenPreviewLight() {
     AyatQuTheme(darkTheme = false) {
         ProfileScreenContent(
+            isLoggedIn = true,
             displayName = "Abdullah",
             email = "abdullah@email.com",
         )
     }
 }
 
-@Preview(showBackground = true, name = "Dark")
+@Preview(showBackground = true, name = "Dark - Logged In")
 @Composable
 private fun ProfileScreenPreviewDark() {
     AyatQuTheme(darkTheme = true) {
         ProfileScreenContent(
+            isLoggedIn = true,
             displayName = "Abdullah",
             email = "abdullah@email.com",
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Guest - Not Logged In")
+@Composable
+private fun ProfileScreenPreviewGuest() {
+    AyatQuTheme(darkTheme = false) {
+        ProfileScreenContent(
+            isLoggedIn = false,
+            displayName = "Guest",
+            email = "",
         )
     }
 }

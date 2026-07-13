@@ -64,11 +64,18 @@ private val ColorDivider      = Color(0xFFF0F2F5)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
+    authViewModel: id.vanard.ayatqu.viewmodel.AuthViewModel = koinViewModel(),
     onLastReadClick: (surahNumber: Int, ayahNumber: Int) -> Unit = { _, _ -> },
 ) {
     val state by viewModel.uiState.collectAsState()
     val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // Get user display name
+    val userName = authState.user?.displayName.orEmpty().ifEmpty {
+        authState.user?.email?.substringBefore("@").orEmpty().ifEmpty { "Guest" }
+    }
 
     // Location permission launcher — requests once when permission is not granted
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -95,6 +102,7 @@ fun HomeScreen(
     HomeScreenContent(
         state = state,
         isNetworkAvailable = isNetworkAvailable,
+        userName = userName,
         onLastReadClick = onLastReadClick,
         onRetry = viewModel::retryPrayerTimes,
     )
@@ -106,6 +114,7 @@ fun HomeScreen(
 internal fun HomeScreenContent(
     state: HomeUiState,
     isNetworkAvailable: Boolean = true,
+    userName: String = "Guest",
     onLastReadClick: (surahNumber: Int, ayahNumber: Int) -> Unit = { _, _ -> },
     onRetry: () -> Unit = {},
 ) {
@@ -118,7 +127,7 @@ internal fun HomeScreenContent(
             .padding(horizontal = 24.dp),
     ) {
         // ── Header ────────────────────────────────────────────────────────────
-        HomeHeader()
+        HomeHeader(userName = userName)
 
         Spacer(Modifier.height(12.dp))
 
@@ -150,23 +159,30 @@ internal fun HomeScreenContent(
 // ── Header ────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun HomeHeader() {
+private fun HomeHeader(userName: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(96.dp),
+            .padding(top = 16.dp, bottom = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        IconPlaceholder(size = 32)
-
-        Text(
-            text = "QURAN",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = ColorTextPrimary,
-            letterSpacing = 1.8.sp,
-        )
+        // Greeting on the left
+        Column {
+            Text(
+                text = "Welcome, ${userName.ifEmpty { "Guest" }}",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorPrimary,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Assalamualaikum",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = ColorMuted,
+            )
+        }
 
         IconPlaceholder(size = 32)
     }
@@ -459,6 +475,26 @@ private fun PreviewHomeFull() {
                 prayerTimes = samplePrayerTimes,
                 locationLabel = "Jakarta",
             ),
+            userName = "Abdullah",
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home - Guest User")
+@Composable
+private fun PreviewHomeGuest() {
+    AyatQuTheme(darkTheme = false) {
+        HomeScreenContent(
+            state = HomeUiState(
+                lastRead = LastRead(
+                    surahNumber = 1,
+                    ayahNumber = 1,
+                    surahName = "Al-Fatihah",
+                ),
+                prayerTimes = samplePrayerTimes,
+                locationLabel = "Jakarta",
+            ),
+            userName = "Guest",
         )
     }
 }
@@ -472,6 +508,7 @@ private fun PreviewHomeNoLastRead() {
                 prayerTimes = samplePrayerTimes,
                 locationLabel = "Jakarta",
             ),
+            userName = "Abdullah",
         )
     }
 }
@@ -482,6 +519,7 @@ private fun PreviewHomeLoading() {
     AyatQuTheme(darkTheme = false) {
         HomeScreenContent(
             state = HomeUiState(isPrayerTimesLoading = true),
+            userName = "Guest",
         )
     }
 }
@@ -492,6 +530,7 @@ private fun PreviewHomeError() {
     AyatQuTheme(darkTheme = false) {
         HomeScreenContent(
             state = HomeUiState(prayerTimesError = "Failed to load prayer times"),
+            userName = "Guest",
         )
     }
 }
