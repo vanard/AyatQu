@@ -750,3 +750,67 @@ val WifiSlash: ImageVector
 
 
 private var _wifiSlash: ImageVector? = null
+
+// ── Trash (regular) ──
+val Trash: ImageVector
+    get() {
+        if (_trash != null) {
+            return _trash!!
+        }
+        _trash = ImageVector.Builder(
+            name = "Regular.Trash",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 256f,
+            viewportHeight = 256f
+        ).apply {
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(216f, 56f)
+                lineTo(40f, 56f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(216f, 56f)
+                lineTo(40f, 56f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(72f, 56f)
+                verticalLineToRelative(-8f)
+                arcToRelative(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, 16f, -16f)
+                horizontalLineToRelative(80f)
+                arcToRelative(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, 16f, 16f)
+                verticalLineToRelative(8f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(176f, 56f)
+                verticalLineToRelative(152f)
+                arcToRelative(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, -16f, 16f)
+                horizontalLineTo(96f)
+                arcToRelative(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, -16f, -16f)
+                verticalLineTo(56f)
+            }
+        }.build()
+
+        return _trash!!
+    }
+
+private var _trash: ImageVector? = null
