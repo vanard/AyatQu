@@ -1,6 +1,7 @@
 package id.vanard.ayatqu.data.repository
 
 import id.vanard.ayatqu.data.LastReadPreference
+import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.data.remote.QuranApiService
 import id.vanard.ayatqu.data.remote.dto.AyahAudioDto
 import id.vanard.ayatqu.data.remote.dto.SurahAudioDto
@@ -22,13 +23,33 @@ class QuranRepositoryImpl(
     private val api: QuranApiService,
     private val networkUtils: NetworkUtils,
     private val lastReadPreference: LastReadPreference,
+    private val surahLocalCache: SurahLocalCache,
 ) : QuranRepository {
 
-    override suspend fun getSurahs(): Result<List<Surah>> = safeCall {
-        api.getSurahs()
-            .data
-            .surahs
-            .map(::toDomain)
+    /**
+     * Offline-first: read from cache if available, otherwise fetch from API.
+     * Surah list is static data (114 surahs), so once cached we never re-fetch.
+     */
+    override suspend fun getSurahs(): Result<List<Surah>> = withContext(Dispatchers.IO) {
+        runCatching {
+            // 1. Try cache first
+            val cached = surahLocalCache.read()
+            if (cached != null) {
+                return@runCatching cached.map(::toDomain)
+            }
+
+            // 2. Cache miss — fetch from API
+            if (!networkUtils.isNetworkAvailable()) {
+                throw IOException("No internet connection and no cached data available.")
+            }
+
+            val surahs = api.getSurahs().data.surahs
+
+            // 3. Save to cache for next time
+            surahLocalCache.write(surahs)
+
+            surahs.map(::toDomain)
+        }
     }
 
     override suspend fun getSurahWithAyahs(surahNumber: Int): Result<Pair<Surah, List<Ayah>>> =
