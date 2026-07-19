@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
 import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -13,18 +14,24 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
-/**
- * Helper to fetch the user's current location once.
- *
- * Requires ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION permission
- * to be granted before calling [getCurrentLocation].
- */
+sealed class LocationFetchResult {
+    data class Success(val location: Location) : LocationFetchResult()
+    data object GpsDisabled : LocationFetchResult()
+    data object PoorSignal : LocationFetchResult()
+    data object PermissionDenied : LocationFetchResult()
+}
+
 class LocationHelper(context: Context) {
 
     private val fusedClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
+
+    private val locationManager =
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 2001
@@ -46,42 +53,68 @@ class LocationHelper(context: Context) {
         )
     }
 
+    fun isLocationEnabled(): Boolean {
+        val gpsEnabled = try {
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        } catch (_: SecurityException) {
+            false
+        }
+        val networkEnabled = try {
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        } catch (_: SecurityException) {
+            false
+        }
+        return gpsEnabled || networkEnabled
+    }
+
     /**
      * Fetches the current location once.
-     * Returns null if permission is not granted or location cannot be determined.
+     * Returns a typed result indicating success, GPS disabled, poor signal, or permission denied.
+     * Times out after 1 second to prevent indefinite hanging.
      */
-    suspend fun getCurrentLocation(): Location? {
-        return suspendCancellableCoroutine { continuation ->
-            val locationRequest = LocationRequest.Builder(
-                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-                1000L,
-            ).setMaxUpdates(1).build()
+    suspend fun getCurrentLocation(): LocationFetchResult {
+        if (!isLocationEnabled()) {
+            return LocationFetchResult.GpsDisabled
+        }
 
-            val callback = object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult) {
-                    fusedClient.removeLocationUpdates(this)
-                    val location = result.lastLocation
-                    if (continuation.isActive) {
-                        continuation.resume(location)
+        val location = withTimeoutOrNull(1_000L.milliseconds) {
+            suspendCancellableCoroutine { continuation ->
+                val locationRequest = LocationRequest.Builder(
+                    Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                    100L,
+                ).setMaxUpdates(1).build()
+
+                val callback = object : LocationCallback() {
+                    override fun onLocationResult(result: LocationResult) {
+                        fusedClient.removeLocationUpdates(this)
+                        val loc = result.lastLocation
+                        if (continuation.isActive) {
+                            continuation.resume(loc)
+                        }
                     }
                 }
-            }
 
-            try {
-                fusedClient.requestLocationUpdates(
-                    locationRequest,
-                    callback,
-                    Looper.getMainLooper(),
-                )
-            } catch (e: SecurityException) {
-                if (continuation.isActive) {
-                    continuation.resume(null)
+                try {
+                    fusedClient.requestLocationUpdates(
+                        locationRequest,
+                        callback,
+                        Looper.getMainLooper(),
+                    )
+                } catch (_: SecurityException) {
+                    if (continuation.isActive) {
+                        continuation.resume(null)
+                    }
+                }
+
+                continuation.invokeOnCancellation {
+                    fusedClient.removeLocationUpdates(callback)
                 }
             }
+        }
 
-            continuation.invokeOnCancellation {
-                fusedClient.removeLocationUpdates(callback)
-            }
+        return when {
+            location != null -> LocationFetchResult.Success(location)
+            else -> LocationFetchResult.PoorSignal
         }
     }
 

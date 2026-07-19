@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.LastRead
 import id.vanard.ayatqu.domain.model.PrayerTime
+import id.vanard.ayatqu.ui.icons.Info
 import id.vanard.ayatqu.ui.icons.Moon
 import id.vanard.ayatqu.util.LocationHelper
 import id.vanard.ayatqu.viewmodel.HomeUiState
@@ -83,17 +84,17 @@ fun HomeScreen(
     ) { permissions ->
         val granted = permissions.values.any { it }
         if (granted) {
-            viewModel.loadPrayerTimesWithLocation()
+            viewModel.loadPrayerTimesWithLocation(fetchLocation = true)
         } else {
-            // Permission denied — fall back to default city
-            viewModel.loadPrayerTimesWithLocation()
+            // Permission denied — skip location, use cache or city fallback
+            viewModel.loadPrayerTimesWithLocation(fetchLocation = false)
         }
     }
 
     // Request location permission on first composition
     LaunchedEffect(Unit) {
         if (LocationHelper.isLocationPermissionGranted(context)) {
-            viewModel.loadPrayerTimesWithLocation()
+            viewModel.loadPrayerTimesWithLocation(fetchLocation = true)
         } else {
             locationPermissionLauncher.launch(LocationHelper.getLocationPermissions())
         }
@@ -129,7 +130,7 @@ internal fun HomeScreenContent(
         // ── Header ────────────────────────────────────────────────────────────
         HomeHeader(userName = userName)
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
         // ── Last Read Card ────────────────────────────────────────────────────
         if (state.lastRead != null) {
@@ -149,6 +150,8 @@ internal fun HomeScreenContent(
             error = state.prayerTimesError,
             isNetworkAvailable = isNetworkAvailable,
             locationLabel = state.locationLabel,
+            locationError = state.locationError,
+            isLocationLoading = state.isLocationLoading,
             onRetry = onRetry,
         )
 
@@ -175,10 +178,10 @@ private fun HomeHeader(userName: String) {
                 fontWeight = FontWeight.Bold,
                 color = ColorPrimary,
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
             Text(
                 text = "Assalamualaikum",
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = ColorMuted,
             )
@@ -256,6 +259,8 @@ private fun PrayerTimesSection(
     error: String?,
     isNetworkAvailable: Boolean,
     locationLabel: String,
+    locationError: String? = null,
+    isLocationLoading: Boolean = false,
     onRetry: () -> Unit,
 ) {
     // Section header
@@ -286,6 +291,12 @@ private fun PrayerTimesSection(
     }
 
     Spacer(Modifier.height(12.dp))
+
+    // Location error banner (informational, not blocking)
+    if (locationError != null && prayerTimes.isEmpty()) {
+        LocationWarningCard(message = locationError)
+        Spacer(Modifier.height(12.dp))
+    }
 
     // Content
     when {
@@ -420,6 +431,32 @@ private fun PrayerTimesErrorCard(
     }
 }
 
+@Composable
+private fun LocationWarningCard(message: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(ColorGold.copy(alpha = 0.1f))
+            .border(1.dp, ColorGold.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Info,
+            contentDescription = null,
+            tint = ColorGold,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = message,
+            fontSize = 13.sp,
+            color = ColorTextPrimary,
+        )
+    }
+}
+
 /**
  * Finds the index of the next upcoming prayer based on current time.
  * Returns 0 if all prayers have passed for the day.
@@ -530,6 +567,21 @@ private fun PreviewHomeError() {
     AyatQuTheme(darkTheme = false) {
         HomeScreenContent(
             state = HomeUiState(prayerTimesError = "Failed to load prayer times"),
+            userName = "Guest",
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home - Location Error")
+@Composable
+private fun PreviewHomeLocationError() {
+    AyatQuTheme(darkTheme = false) {
+        HomeScreenContent(
+            state = HomeUiState(
+                locationError = "GPS is disabled. Please enable location services.",
+                prayerTimes = samplePrayerTimes,
+                locationLabel = "Jakarta",
+            ),
             userName = "Guest",
         )
     }
