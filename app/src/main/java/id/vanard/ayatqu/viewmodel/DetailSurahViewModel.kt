@@ -49,16 +49,22 @@ class DetailSurahViewModel(
     private var surahNumber: Int = 0
 
     init {
-        val sessionToken = SessionToken(
-            application,
-            ComponentName(application, QuranPlaybackService::class.java),
-        )
-        val controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
-        controllerFuture.addListener({
-            val ctrl = controllerFuture.get()
-            controller = ctrl
-            ctrl.addListener(playerListener)
-        }, { it.run() })
+        try {
+            val sessionToken = SessionToken(
+                application,
+                ComponentName(application, QuranPlaybackService::class.java),
+            )
+            val controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
+            controllerFuture.addListener({
+                runCatching {
+                    val ctrl = controllerFuture.get()
+                    controller = ctrl
+                    ctrl.addListener(playerListener)
+                }
+            }, { it.run() })
+        } catch (_: Exception) {
+            // Service may not be available yet; playback will be disabled
+        }
     }
 
     private val playerListener = object : Player.Listener {
