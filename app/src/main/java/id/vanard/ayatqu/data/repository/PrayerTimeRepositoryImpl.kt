@@ -56,6 +56,7 @@ class PrayerTimeRepositoryImpl(
     override suspend fun getPrayerTimesByCoordinates(
         latitude: Double,
         longitude: Double,
+        locationLabel: String?,
     ): Result<List<PrayerTime>> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -90,7 +91,7 @@ class PrayerTimeRepositoryImpl(
                     prayerTimes = prayerTimes,
                     latitude = latitude,
                     longitude = longitude,
-                    locationLabel = "%.2f, %.2f".format(latitude, longitude),
+                    locationLabel = locationLabel ?: "%.2f, %.2f".format(latitude, longitude),
                 )
 
                 prayerTimes

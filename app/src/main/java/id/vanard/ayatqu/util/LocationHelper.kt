@@ -3,6 +3,7 @@ package id.vanard.ayatqu.util
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Looper
@@ -15,6 +16,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -141,6 +143,33 @@ class LocationHelper(context: Context) {
                     continuation.resume(null)
                 }
             }
+        }
+    }
+
+    /**
+     * Reverse geocode latitude/longitude to a human-readable place name.
+     * Returns a city/country string or formatted coordinates as fallback.
+     */
+    fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String {
+        return try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            @Suppress("DEPRECATION")
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val addr = addresses[0]
+                val city = addr.locality ?: addr.subAdminArea ?: ""
+                val country = addr.countryName ?: ""
+                when {
+                    city.isNotEmpty() && country.isNotEmpty() -> "$city, $country"
+                    city.isNotEmpty() -> city
+                    country.isNotEmpty() -> country
+                    else -> "%.2f, %.2f".format(latitude, longitude)
+                }
+            } else {
+                "%.2f, %.2f".format(latitude, longitude)
+            }
+        } catch (_: Exception) {
+            "%.2f, %.2f".format(latitude, longitude)
         }
     }
 }

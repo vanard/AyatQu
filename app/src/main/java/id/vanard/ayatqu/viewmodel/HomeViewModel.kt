@@ -1,5 +1,6 @@
 package id.vanard.ayatqu.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.viewModelScope
 import id.vanard.ayatqu.data.PrayerTimeCache
 import id.vanard.ayatqu.domain.model.LastRead
@@ -9,6 +10,7 @@ import id.vanard.ayatqu.domain.repository.QuranRepository
 import id.vanard.ayatqu.util.LocationFetchResult
 import id.vanard.ayatqu.util.LocationHelper
 import id.vanard.ayatqu.util.NetworkUtils
+import id.vanard.ayatqu.worker.AdhanSchedulerWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +38,7 @@ class HomeViewModel(
     private val locationHelper: LocationHelper,
     private val prayerTimeCache: PrayerTimeCache,
     networkUtils: NetworkUtils,
+    private val application: Application,
 ) : NetworkAwareViewModel(networkUtils) {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -144,22 +147,27 @@ class HomeViewModel(
         when (result) {
             is LocationFetchResult.Success -> {
                 _uiState.update { it.copy(isLocationLoading = false, locationError = null) }
+                val label = locationHelper.reverseGeocode(
+                    application, result.location.latitude, result.location.longitude,
+                )
                 fetchPrayerTimesByCoordinates(
                     lat = result.location.latitude,
                     lng = result.location.longitude,
-                    label = "%.2f, %.2f".format(result.location.latitude, result.location.longitude),
+                    label = label,
                     hasCache = hasCache,
                 )
             }
             is LocationFetchResult.GpsDisabled -> {
-                // GPS disabled — try last known location as fallback
                 val lastKnown = locationHelper.getLastKnownLocation()
                 if (lastKnown != null) {
                     _uiState.update { it.copy(isLocationLoading = false, locationError = null) }
+                    val label = locationHelper.reverseGeocode(
+                        application, lastKnown.latitude, lastKnown.longitude,
+                    )
                     fetchPrayerTimesByCoordinates(
                         lat = lastKnown.latitude,
                         lng = lastKnown.longitude,
-                        label = "%.2f, %.2f".format(lastKnown.latitude, lastKnown.longitude),
+                        label = label,
                         hasCache = hasCache,
                     )
                 } else {
@@ -173,14 +181,16 @@ class HomeViewModel(
                 }
             }
             is LocationFetchResult.PoorSignal -> {
-                // Poor signal — try last known location as fallback
                 val lastKnown = locationHelper.getLastKnownLocation()
                 if (lastKnown != null) {
                     _uiState.update { it.copy(isLocationLoading = false, locationError = null) }
+                    val label = locationHelper.reverseGeocode(
+                        application, lastKnown.latitude, lastKnown.longitude,
+                    )
                     fetchPrayerTimesByCoordinates(
                         lat = lastKnown.latitude,
                         lng = lastKnown.longitude,
-                        label = "%.2f, %.2f".format(lastKnown.latitude, lastKnown.longitude),
+                        label = label,
                         hasCache = hasCache,
                     )
                 } else {
@@ -218,6 +228,7 @@ class HomeViewModel(
         prayerTimeRepository.getPrayerTimesByCoordinates(
             latitude = lat,
             longitude = lng,
+            locationLabel = label,
         ).onSuccess { times ->
             _uiState.update {
                 it.copy(
@@ -226,6 +237,8 @@ class HomeViewModel(
                     locationLabel = label ?: it.locationLabel,
                 )
             }
+            // Re-schedule adhan alarms with fresh prayer times
+            AdhanSchedulerWorker.runNow(application)
         }.onFailure { e ->
             if (!hasCache) {
                 _uiState.update {
@@ -254,6 +267,8 @@ class HomeViewModel(
                     locationLabel = "Jakarta",
                 )
             }
+            // Re-schedule adhan alarms with fresh prayer times
+            AdhanSchedulerWorker.runNow(application)
         }.onFailure { e ->
             if (!hasCache) {
                 _uiState.update {
