@@ -2,7 +2,6 @@ package id.vanard.ayatqu.data.local
 
 import android.content.Context
 import com.google.gson.Gson
-import id.vanard.ayatqu.data.remote.dto.AudioData
 import id.vanard.ayatqu.data.remote.dto.SurahDto
 import id.vanard.ayatqu.data.remote.dto.VerseDto
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +11,6 @@ import java.io.File
 data class CachedSurahDetail(
     val surah: SurahDto,
     val verses: List<VerseDto>,
-    val ayahAudios: Map<Int, AudioData>,
 )
 
 class SurahDetailLocalCache(context: Context) {

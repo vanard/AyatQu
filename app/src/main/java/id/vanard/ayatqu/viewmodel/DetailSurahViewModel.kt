@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.net.URL
 
 data class DetailSurahUiState(
@@ -188,16 +189,14 @@ class DetailSurahViewModel(
         if (ayahNumber in state.downloadingAyahs) return
         if (ayahNumber in state.downloadedAyahs) return
 
-        val ayah = state.ayahs.find { it.ayahNumber == ayahNumber } ?: return
-        val audioUrl = ayah.audioUrls.firstOrNull()?.ayahAudioUrl
-            ?: ayah.audioUrls.firstOrNull()?.surahAudioUrl
-            ?: return
-
         _uiState.update { it.copy(downloadingAyahs = it.downloadingAyahs + ayahNumber) }
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
+                    val audioUrl = repository.getAyahAudioUrl(surahNumber, ayahNumber)
+                        ?: throw IOException("Could not get audio URL")
+
                     val file = audioCache.getAyahFile(surahNumber, ayahNumber)
                     URL(audioUrl).openStream().use { input ->
                         file.outputStream().use { output ->
@@ -244,10 +243,10 @@ class DetailSurahViewModel(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 ayahsToDownload.forEachIndexed { index, ayah ->
-                    val audioUrl = ayah.audioUrls.firstOrNull()?.ayahAudioUrl
-                        ?: ayah.audioUrls.firstOrNull()?.surahAudioUrl
-                        ?: return@forEachIndexed
                     try {
+                        val audioUrl = repository.getAyahAudioUrl(surahNumber, ayah.ayahNumber)
+                            ?: return@forEachIndexed
+
                         val file = audioCache.getAyahFile(surahNumber, ayah.ayahNumber)
                         URL(audioUrl).openStream().use { input ->
                             file.outputStream().use { output ->

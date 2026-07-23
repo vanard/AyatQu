@@ -13,9 +13,6 @@ import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.domain.repository.QuranRepository
 import id.vanard.ayatqu.util.NetworkUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -46,35 +43,19 @@ class QuranRepositoryImpl(
     }
 
     /**
-     * Fetch surah detail with verses, translations, and per-ayah audio URLs.
-     * Returns cached data if available (Quran is static, no need to re-fetch).
+     * Fetch surah detail with verses and translations.
+     * Audio URLs are NOT fetched here — use getAyahAudioUrl() on demand.
      */
     override suspend fun getSurahWithAyahs(surahNumber: Int): Result<Pair<Surah, List<Ayah>>> =
         withContext(Dispatchers.IO) {
             runCatching {
-                // Check local cache first
                 val cached = surahDetailLocalCache.read(surahNumber)
                 if (cached != null) {
                     val surah = toDomain(cached.surah)
-                    val ayahs = cached.verses.map { verse ->
-                        val ayah = verse.toDomain(surahNumber)
-                        val audioData = cached.ayahAudios[verse.ayah]
-                        val audio = if (audioData != null) {
-                            listOf(
-                                AyahAudio(
-                                    reciterId = 0,
-                                    reciterName = audioData.reciter.orEmpty(),
-                                    surahAudioUrl = audioData.audio,
-                                    ayahAudioUrl = audioData.audio,
-                                )
-                            )
-                        } else emptyList()
-                        ayah.copy(audioUrls = audio)
-                    }
+                    val ayahs = cached.verses.map { it.toDomain(surahNumber) }
                     return@runCatching surah to ayahs
                 }
 
-                // Fetch from network
                 if (!networkUtils.isNetworkAvailable()) {
                     throw IOException("No internet connection. Please check your network and try again.")
                 }
@@ -82,42 +63,27 @@ class QuranRepositoryImpl(
                 val response = api.getSurahWithVerses(surahNumber).data
                 val surah = toDomain(response.surah)
                 val verses = response.verses.orEmpty()
+                val ayahs = verses.map { it.toDomain(surahNumber) }
 
-                // Fetch per-ayah audio in parallel using lightweight endpoint
-                val ayahAudioMap = mutableMapOf<Int, id.vanard.ayatqu.data.remote.dto.AudioData>()
-                val ayahs = coroutineScope {
-                    verses.map { verse ->
-                        async {
-                            val ayah = verse.toDomain(surahNumber)
-                            val audio = try {
-                                val audioResponse = api.getAyahAudio(surahNumber, verse.ayah).data
-                                ayahAudioMap[verse.ayah] = audioResponse
-                                listOf(
-                                    AyahAudio(
-                                        reciterId = 0,
-                                        reciterName = audioResponse.reciter.orEmpty(),
-                                        surahAudioUrl = audioResponse.audio,
-                                        ayahAudioUrl = audioResponse.audio,
-                                    )
-                                )
-                            } catch (_: Exception) {
-                                emptyList()
-                            }
-                            ayah.copy(audioUrls = audio)
-                        }
-                    }.awaitAll()
-                }
-
-                // Save to cache
                 val cachedDetail = id.vanard.ayatqu.data.local.CachedSurahDetail(
                     surah = response.surah,
                     verses = verses,
-                    ayahAudios = ayahAudioMap,
                 )
                 surahDetailLocalCache.write(surahNumber, cachedDetail)
 
                 surah to ayahs
             }
+        }
+
+    /**
+     * Fetch audio URL for a single ayah on demand.
+     * Returns the audio URL string or null on failure.
+     */
+    override suspend fun getAyahAudioUrl(surahNumber: Int, ayahNumber: Int): String? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                api.getAyahAudio(surahNumber, ayahNumber).data.audio
+            }.getOrNull()
         }
 
     override suspend fun getAyah(surahNumber: Int, ayahNumber: Int): Result<Ayah> = safeCall {
