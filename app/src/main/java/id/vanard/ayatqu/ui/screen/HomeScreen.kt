@@ -44,6 +44,8 @@ import id.vanard.ayatqu.domain.model.PrayerTime
 import id.vanard.ayatqu.ui.icons.Info
 import id.vanard.ayatqu.ui.icons.Moon
 import id.vanard.ayatqu.util.LocationHelper
+import id.vanard.ayatqu.util.PermissionHelper
+import id.vanard.ayatqu.worker.AdhanSchedulerWorker
 import id.vanard.ayatqu.viewmodel.HomeUiState
 import id.vanard.ayatqu.viewmodel.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -91,12 +93,28 @@ fun HomeScreen(
         }
     }
 
+    // Notification permission launcher — requests POST_NOTIFICATIONS on Android 13+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) {
+            AdhanSchedulerWorker.runNow(context)
+        }
+    }
+
     // Request location permission on first composition
     LaunchedEffect(Unit) {
         if (LocationHelper.isLocationPermissionGranted(context)) {
             viewModel.loadPrayerTimesWithLocation(fetchLocation = true)
         } else {
             locationPermissionLauncher.launch(LocationHelper.getLocationPermissions())
+        }
+
+        // Request notification permission on Android 13+ if not yet granted
+        if (PermissionHelper.isNotificationPermissionRequired(context) &&
+            !PermissionHelper.isNotificationPermissionGranted(context)
+        ) {
+            notificationPermissionLauncher.launch(PermissionHelper.getNotificationPermission())
         }
     }
 
