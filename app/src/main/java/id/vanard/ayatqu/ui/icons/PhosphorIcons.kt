@@ -814,3 +814,210 @@ val Trash: ImageVector
     }
 
 private var _trash: ImageVector? = null
+
+
+// ── ArrowLeft (regular) ──
+val ArrowLeft: ImageVector
+    get() {
+        if (_arrowLeft != null) return _arrowLeft!!
+        _arrowLeft = ImageVector.Builder(
+            name = "Regular.ArrowLeft",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(216f, 128f)
+                horizontalLineTo(40f)
+                moveTo(104f, 56f)
+                lineTo(40f, 128f)
+                lineTo(104f, 200f)
+            }
+        }.build()
+        return _arrowLeft!!
+    }
+private var _arrowLeft: ImageVector? = null
+
+
+// ── Play (regular) ──
+val Play: ImageVector
+    get() {
+        if (_play != null) return _play!!
+        _play = ImageVector.Builder(
+            name = "Regular.Play",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(224f, 128f)
+                arcTo(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = false, 192f, 128f)
+                lineTo(80f, 56f)
+                arcTo(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, 64f, 69.3f)
+                verticalLineTo(186.7f)
+                arcTo(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, 80f, 200f)
+                close()
+            }
+        }.build()
+        return _play!!
+    }
+private var _play: ImageVector? = null
+
+
+// ── Pause (regular) ──
+val Pause: ImageVector
+    get() {
+        if (_pause != null) return _pause!!
+        _pause = ImageVector.Builder(
+            name = "Regular.Pause",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(160f, 56f)
+                verticalLineTo(200f)
+                moveTo(96f, 56f)
+                verticalLineTo(200f)
+            }
+        }.build()
+        return _pause!!
+    }
+private var _pause: ImageVector? = null
+
+
+// ── DotsThree (regular) ──
+val DotsThree: ImageVector
+    get() {
+        if (_dotsThree != null) return _dotsThree!!
+        _dotsThree = ImageVector.Builder(
+            name = "Regular.DotsThree",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Center dot
+                moveTo(140f, 128f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 84f, 128f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 140f, 128f)
+                // Right dot
+                moveTo(196f, 128f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 140f, 128f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 196f, 128f)
+                // Left dot
+                moveTo(84f, 128f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 28f, 128f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 84f, 128f)
+            }
+        }.build()
+        return _dotsThree!!
+    }
+private var _dotsThree: ImageVector? = null
+
+
+// ── DotsThreeVertical (regular) ──
+val DotsThreeVertical: ImageVector
+    get() {
+        if (_dotsThreeVertical != null) return _dotsThreeVertical!!
+        _dotsThreeVertical = ImageVector.Builder(
+            name = "Regular.DotsThreeVertical",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Top dot
+                moveTo(128f, 84f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 72f, 84f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 128f, 84f)
+                // Center dot
+                moveTo(128f, 140f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 72f, 140f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 128f, 140f)
+                // Bottom dot
+                moveTo(128f, 196f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 72f, 196f)
+                arcTo(28f, 28f, 0f, isMoreThanHalf = true, isPositiveArc = true, 128f, 196f)
+            }
+        }.build()
+        return _dotsThreeVertical!!
+    }
+private var _dotsThreeVertical: ImageVector? = null
+
+
+// ── Download (regular) ──
+val Download: ImageVector
+    get() {
+        if (_download != null) return _download!!
+        _download = ImageVector.Builder(
+            name = "Regular.Download",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            // Arrow down
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(128f, 32f)
+                verticalLineTo(168f)
+                moveTo(88f, 128f)
+                lineTo(128f, 168f)
+                lineTo(168f, 128f)
+            }
+            // Tray
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(216f, 136f)
+                verticalLineTo(192f)
+                arcTo(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, 200f, 208f)
+                horizontalLineTo(56f)
+                arcTo(16f, 16f, 0f, isMoreThanHalf = false, isPositiveArc = true, 40f, 192f)
+                verticalLineTo(136f)
+            }
+        }.build()
+        return _download!!
+    }
+private var _download: ImageVector? = null
+
+
+// ── Check (regular) ──
+val Check: ImageVector
+    get() {
+        if (_check != null) return _check!!
+        _check = ImageVector.Builder(
+            name = "Regular.Check",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 256f, viewportHeight = 256f
+        ).apply {
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 16f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(216f, 72f)
+                lineTo(96f, 184f)
+                lineTo(40f, 128f)
+            }
+        }.build()
+        return _check!!
+    }
+private var _check: ImageVector? = null

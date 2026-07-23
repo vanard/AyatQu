@@ -1,9 +1,12 @@
 package id.vanard.ayatqu.di
 
 import com.google.firebase.auth.FirebaseAuth
+import id.vanard.ayatqu.data.AdhanPreference
 import id.vanard.ayatqu.data.LastReadPreference
 import id.vanard.ayatqu.data.OnboardingPreference
 import id.vanard.ayatqu.data.PrayerTimeCache
+import id.vanard.ayatqu.data.local.AyahAudioCache
+import id.vanard.ayatqu.data.local.SurahDetailLocalCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.data.remote.PrayerTimeApiService
 import id.vanard.ayatqu.data.remote.PrayerTimeRetrofitClient
@@ -20,8 +23,10 @@ import id.vanard.ayatqu.util.LocationHelper
 import id.vanard.ayatqu.util.NetworkUtils
 import id.vanard.ayatqu.viewmodel.AppViewModel
 import id.vanard.ayatqu.viewmodel.AuthViewModel
+import id.vanard.ayatqu.viewmodel.DetailSurahViewModel
 import id.vanard.ayatqu.viewmodel.HomeViewModel
 import id.vanard.ayatqu.viewmodel.QuranViewModel
+import id.vanard.ayatqu.worker.AdhanSchedulerWorker
 import id.vanard.ayatqu.worker.QuranDownloadWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.workmanager.dsl.workerOf
@@ -35,7 +40,10 @@ val appModule = module {
     single { OnboardingPreference(androidContext()) }
     single { LastReadPreference(androidContext()) }
     single { SurahLocalCache(androidContext()) }
+    single { SurahDetailLocalCache(androidContext()) }
+    single { AyahAudioCache(androidContext()) }
     single { PrayerTimeCache(androidContext()) }
+    single { AdhanPreference(androidContext()) }
 
     // Firebase
     single { FirebaseAuth.getInstance() }
@@ -59,7 +67,9 @@ val appModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::QuranViewModel)
+    viewModelOf(::DetailSurahViewModel)
 
     // Workers
     workerOf(::QuranDownloadWorker)
+    workerOf(::AdhanSchedulerWorker)
 }
