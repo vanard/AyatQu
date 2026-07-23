@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,13 +26,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -132,6 +136,7 @@ fun DetailSurahScreen(
 
 // ── Internal content ──────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DetailSurahContent(
     state: DetailSurahUiState,
@@ -141,72 +146,106 @@ internal fun DetailSurahContent(
     onDownloadAll: () -> Unit = {},
     onStopPlayback: () -> Unit = {},
 ) {
-    Column(
+    var menuExpanded by remember { mutableStateOf(false) }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(ColorBgSubtle)
-            .statusBarsPadding(),
-    ) {
-        // ── Header ───────────────────────────────────────────────────────────
-        DetailSurahHeader(
-            surah = state.surah,
-            onBackClick = onBackClick,
-            onDownloadAll = onDownloadAll,
-            isDownloading = state.isDownloadingAll,
-        )
-
-        // ── Download progress ────────────────────────────────────────────────
-        if (state.isDownloadingAll && state.downloadProgress != null) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(ColorSurface)
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-            ) {
-                LinearProgressIndicator(
-                    progress = { state.downloadProgress.first.toFloat() / state.downloadProgress.second },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp)),
-                    color = ColorGold,
-                    trackColor = ColorBorder,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Downloading ${state.downloadProgress.first}/${state.downloadProgress.second}",
-                    fontSize = 11.sp,
-                    color = ColorMuted,
-                )
-            }
-        }
-
-        // ── Bismillah ────────────────────────────────────────────────────────
-        if (state.surah?.bismillahPre == true) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(ColorSurface)
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0652\u0631\u0651\u064E\u0645\u0652\u0639\u0650 \u0627\u0644\u0652\u0631\u0651\u064E\u062D\u0652\u0645\u064E\u0646\u0650\u064A",
-                    fontSize = 22.sp,
-                    color = ColorGold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            HorizontalDivider(color = ColorBorder, thickness = 0.5.dp)
-        }
-
-        // ── Ayah list ────────────────────────────────────────────────────────
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = state.surah?.nameEnglish ?: "",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorTextPrimary,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = state.surah?.nameArabic ?: "",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ColorGold,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = buildString {
+                                state.surah?.let { append("${it.versesCount} Ayahs") }
+                                state.surah?.let { append(" . ${it.revelationPlace.replaceFirstChar { c -> c.uppercase() }}") }
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ColorPrimary,
+                            letterSpacing = 0.6.sp,
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = ArrowLeft,
+                            contentDescription = "Back",
+                            tint = ColorTextPrimary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                },
+                actions = {
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = DotsThreeVertical,
+                                contentDescription = "More",
+                                tint = ColorTextPrimary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = if (state.isDownloadingAll) "Downloading..." else "Download all",
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    if (!state.isDownloadingAll) onDownloadAll()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Download,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                },
+                                enabled = !state.isDownloadingAll,
+                            )
+                        }
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ColorSurface,
+                    scrolledContainerColor = ColorSurface,
+                ),
+            )
+        },
+    ) { padding ->
         if (state.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .weight(1f),
+                    .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
@@ -216,10 +255,60 @@ internal fun DetailSurahContent(
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = padding,
             ) {
+                // Download progress
+                if (state.isDownloadingAll && state.downloadProgress != null) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(ColorSurface)
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                        ) {
+                            LinearProgressIndicator(
+                                progress = { state.downloadProgress.first.toFloat() / state.downloadProgress.second },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                                color = ColorGold,
+                                trackColor = ColorBorder,
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Downloading ${state.downloadProgress.first}/${state.downloadProgress.second}",
+                                fontSize = 11.sp,
+                                color = ColorMuted,
+                            )
+                        }
+                    }
+                }
+
+                // Bismillah
+                if (state.surah?.bismillahPre == true) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(ColorSurface)
+                                .padding(horizontal = 24.dp, vertical = 16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0652\u0631\u0651\u064E\u0645\u0652\u0639\u0650 \u0627\u0644\u0652\u0631\u0651\u064E\u062D\u0652\u0645\u064E\u0646\u0650\u064A",
+                                fontSize = 22.sp,
+                                color = ColorGold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        HorizontalDivider(color = ColorBorder, thickness = 0.5.dp)
+                    }
+                }
+
+                // Ayahs
                 items(
                     items = state.ayahs,
                     key = { it.ayahNumber },
@@ -243,103 +332,6 @@ internal fun DetailSurahContent(
             }
         }
     }
-}
-
-// ── Header ────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun DetailSurahHeader(
-    surah: Surah?,
-    onBackClick: () -> Unit,
-    onDownloadAll: () -> Unit,
-    isDownloading: Boolean,
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(ColorSurface)
-            .padding(horizontal = 8.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector = ArrowLeft,
-                contentDescription = "Back",
-                tint = ColorTextPrimary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = surah?.nameEnglish ?: "",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = ColorTextPrimary,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = surah?.nameArabic ?: "",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ColorGold,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = buildString {
-                    surah?.let { append("${it.versesCount} Ayahs") }
-                    surah?.let { append(" . ${it.revelationPlace.replaceFirstChar { c -> c.uppercase() }}") }
-                },
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ColorPrimary,
-                letterSpacing = 0.6.sp,
-            )
-        }
-
-        // Overflow menu
-        Box {
-            IconButton(onClick = { menuExpanded = true }) {
-                Icon(
-                    imageVector = DotsThreeVertical,
-                    contentDescription = "More",
-                    tint = ColorTextPrimary,
-                    modifier = Modifier.size(24.dp),
-                )
-            }
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-            ) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = if (isDownloading) "Downloading..." else "Download all",
-                            fontWeight = FontWeight.Medium,
-                        )
-                    },
-                    onClick = {
-                        menuExpanded = false
-                        if (!isDownloading) onDownloadAll()
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Download,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    },
-                    enabled = !isDownloading,
-                )
-            }
-        }
-    }
-    HorizontalDivider(color = ColorBorder, thickness = 0.5.dp)
 }
 
 // ── Ayah card ─────────────────────────────────────────────────────────────────
