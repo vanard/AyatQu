@@ -1,16 +1,18 @@
 package id.vanard.ayatqu.viewmodel
 
 import android.app.Application
+import android.content.ComponentName
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import id.vanard.ayatqu.data.local.AyahAudioCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.domain.model.Ayah
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.domain.repository.QuranRepository
+import id.vanard.ayatqu.service.QuranPlaybackService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,29 +45,40 @@ class DetailSurahViewModel(
     private val _uiState = MutableStateFlow(DetailSurahUiState())
     val uiState: StateFlow<DetailSurahUiState> = _uiState.asStateFlow()
 
-    private val exoPlayer: ExoPlayer = ExoPlayer.Builder(application).build()
-
+    private var controller: MediaController? = null
     private var surahNumber: Int = 0
 
     init {
-        exoPlayer.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_BUFFERING -> _uiState.update { it.copy(isPreparingAudio = true) }
-                    Player.STATE_READY -> _uiState.update { it.copy(isPreparingAudio = false) }
-                    Player.STATE_ENDED -> {
-                        _uiState.update { it.copy(isPreparingAudio = false) }
-                        playNextAyah()
-                    }
-                }
-            }
+        val sessionToken = SessionToken(
+            application,
+            ComponentName(application, QuranPlaybackService::class.java),
+        )
+        val controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
+        controllerFuture.addListener({
+            val ctrl = controllerFuture.get()
+            controller = ctrl
+            ctrl.addListener(playerListener)
+        }, { it.run() })
+    }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                if (!isPlaying && exoPlayer.currentPosition >= exoPlayer.duration - 500) {
+    private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            when (playbackState) {
+                Player.STATE_BUFFERING -> _uiState.update { it.copy(isPreparingAudio = true) }
+                Player.STATE_READY -> _uiState.update { it.copy(isPreparingAudio = false) }
+                Player.STATE_ENDED -> {
+                    _uiState.update { it.copy(isPreparingAudio = false) }
                     playNextAyah()
                 }
             }
-        })
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            val ctrl = controller ?: return
+            if (!isPlaying && ctrl.currentPosition >= ctrl.duration - 500) {
+                playNextAyah()
+            }
+        }
     }
 
     fun loadSurah(number: Int) {
@@ -73,7 +86,6 @@ class DetailSurahViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            // Load title from surah list cache instantly
             val cachedSurahs = surahLocalCache.read()
             val cachedSurah = cachedSurahs?.find { it.number == number }
             if (cachedSurah != null) {
@@ -92,7 +104,6 @@ class DetailSurahViewModel(
                 }
             }
 
-            // Load full detail (ayahs + audio) from cache or network
             repository.getSurahWithAyahs(number)
                 .onSuccess { (surah, ayahs) ->
                     val downloaded = ayahs.mapNotNull { ayah ->
@@ -116,26 +127,30 @@ class DetailSurahViewModel(
     }
 
     fun playAyah(ayahNumber: Int) {
+        val ctrl = controller ?: return
         val state = _uiState.value
 
-        // Only play if downloaded locally
         if (ayahNumber !in state.downloadedAyahs) return
 
-        // If already playing this ayah, pause
         if (state.playingAyah == ayahNumber) {
-            exoPlayer.pause()
+            ctrl.pause()
             _uiState.update { it.copy(playingAyah = null) }
             return
         }
 
-        exoPlayer.stop()
-
         val localPath = audioCache.getLocalPath(surahNumber, ayahNumber) ?: return
+        val surahName = state.surah?.nameEnglish ?: "Surah $surahNumber"
 
-        val mediaItem = MediaItem.fromUri("file://$localPath")
-        exoPlayer.setMediaItem(mediaItem)
-        exoPlayer.prepare()
-        exoPlayer.play()
+        val mediaItem = QuranPlaybackService.buildMediaItem(
+            localPath = localPath,
+            surahNumber = surahNumber,
+            ayahNumber = ayahNumber,
+            surahName = surahName,
+        )
+
+        ctrl.setMediaItem(mediaItem)
+        ctrl.prepare()
+        ctrl.play()
 
         _uiState.update { it.copy(playingAyah = ayahNumber) }
     }
@@ -152,7 +167,7 @@ class DetailSurahViewModel(
     }
 
     fun stopPlayback() {
-        exoPlayer.stop()
+        controller?.stop()
         _uiState.update { it.copy(playingAyah = null) }
     }
 
@@ -252,6 +267,7 @@ class DetailSurahViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        exoPlayer.release()
+        controller?.removeListener(playerListener)
+        controller?.release()
     }
 }

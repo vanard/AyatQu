@@ -4,9 +4,15 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".AyatQuApp"
@@ -28,6 +34,27 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <receiver
+            android:name=".worker.AdhanAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".worker.SnoozeReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".worker.BootCompletedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.QuranPlaybackService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

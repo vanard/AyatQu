@@ -71,6 +71,11 @@ dependencies {
     // Google Play Services Location
     implementation(libs.play.services.location)
 
+    // Media3 ExoPlayer — audio playback for Quran ayahs
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.session)
+
     // Retrofit 3 + OkHttp 5 — versions managed by BOM
     implementation(platform(libs.retrofit.bom))
     implementation(libs.retrofit)

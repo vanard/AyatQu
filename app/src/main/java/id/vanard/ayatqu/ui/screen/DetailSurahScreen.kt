@@ -50,7 +50,6 @@ import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.Ayah
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.ui.icons.ArrowLeft
-import id.vanard.ayatqu.ui.icons.Check
 import id.vanard.ayatqu.ui.icons.DotsThreeVertical
 import id.vanard.ayatqu.ui.icons.Download
 import id.vanard.ayatqu.ui.icons.Pause
@@ -403,73 +402,68 @@ private fun AyahCard(
 
         Spacer(Modifier.height(10.dp))
 
-        // Play / Download row
+        // Single action button: download / loading / play / pause
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Download button
-            if (isDownloaded) {
-                Icon(
-                    imageVector = Check,
-                    contentDescription = "Downloaded",
-                    tint = ColorGold,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-            } else if (isDownloading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    color = ColorGold,
-                    strokeWidth = 2.dp,
-                )
-                Spacer(Modifier.width(8.dp))
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(ColorPrimary.copy(alpha = 0.08f))
-                        .clickable(onClick = onDownloadClick),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Download,
-                        contentDescription = "Download",
-                        tint = ColorPrimary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
+            val buttonColor = when {
+                isPlaying -> ColorGold
+                isDownloaded -> ColorPrimary
+                else -> ColorPrimary.copy(alpha = 0.08f)
             }
+            val iconTint = when {
+                isPlaying -> Color.White
+                isDownloaded -> Color.White
+                else -> ColorPrimary
+            }
+            val clickable = isDownloaded || (!isDownloaded && !isDownloading)
 
-            // Play button
-            val playAlpha = if (isDownloaded) 1f else 0.3f
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(if (isPlaying) ColorGold else ColorPrimary.copy(alpha = playAlpha))
+                    .background(buttonColor)
                     .then(
-                        if (isDownloaded) Modifier.clickable(onClick = onPlayClick)
-                        else Modifier
+                        if (clickable) Modifier.clickable {
+                            if (isDownloaded) onPlayClick() else onDownloadClick()
+                        } else Modifier
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                if (isPreparingAudio) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                    )
-                } else {
-                    Icon(
-                        imageVector = if (isPlaying) Pause else Play,
-                        contentDescription = if (isPlaying) "Pause" else if (isDownloaded) "Play" else "Download ayah first",
-                        tint = Color.White.copy(alpha = playAlpha),
-                        modifier = Modifier.size(18.dp),
-                    )
+                when {
+                    isDownloading || isPreparingAudio -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = if (isPreparingAudio) Color.White else ColorPrimary,
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                    isPlaying -> {
+                        Icon(
+                            imageVector = Pause,
+                            contentDescription = "Pause",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    isDownloaded -> {
+                        Icon(
+                            imageVector = Play,
+                            contentDescription = "Play",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    else -> {
+                        Icon(
+                            imageVector = Download,
+                            contentDescription = "Download",
+                            tint = ColorPrimary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
         }
