@@ -38,8 +38,8 @@ val InactiveDot         = Color(0xFF4B5563)
 val BorderSubtle        = Color(0xFFE5E7EB)
 val BorderDark          = Color(0xFF374151)
 
-// ── Masjid surfaces ───────────────────────────────────────────────────────────
-val MasjidSurface       = Color(0xFF111111)
-val MasjidInputBg       = Color(0xFFF3F4F6)
-val MasjidTextDark      = Color(0xFF111827)
-val MasjidTextStrong    = Color(0xFF1F2937)
+// ── AyatQu surfaces ───────────────────────────────────────────────────────────
+val AyatQuSurface       = Color(0xFF111111)
+val AyatQuInputBg       = Color(0xFFF3F4F6)
+val AyatQuTextDark      = Color(0xFF111827)
+val AyatQuTextStrong    = Color(0xFF1F2937)

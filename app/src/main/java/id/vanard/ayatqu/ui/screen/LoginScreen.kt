@@ -49,9 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
-import id.vanard.ayatqu.core.ui.theme.MasjidSurface
-import id.vanard.ayatqu.core.ui.theme.MasjidTextDark
-import id.vanard.ayatqu.core.ui.theme.MasjidTextStrong
+import id.vanard.ayatqu.core.ui.theme.AyatQuSurface
+import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
+import id.vanard.ayatqu.core.ui.theme.AyatQuTextStrong
 import id.vanard.ayatqu.core.ui.theme.TextHint
 import id.vanard.ayatqu.viewmodel.AuthEvent
 import id.vanard.ayatqu.viewmodel.AuthViewModel
@@ -124,7 +124,7 @@ fun LoginScreen(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
                         ),
-                        color = MasjidTextStrong
+                        color = AyatQuTextStrong
                     )
                 }
 
@@ -133,7 +133,7 @@ fun LoginScreen(
                 Text(
                     text = "Welcome back",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MasjidTextDark
+                    color = AyatQuTextDark
                 )
 
                 Spacer(Modifier.height(24.dp))
@@ -163,7 +163,7 @@ fun LoginScreen(
                             Text(
                                 text = if (passwordVisible) "Hide" else "Show",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MasjidTextStrong
+                                color = AyatQuTextStrong
                             )
                         }
                     }
@@ -178,7 +178,7 @@ fun LoginScreen(
                         Text(
                             text = "Forgot password?",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MasjidTextStrong
+                            color = AyatQuTextStrong
                         )
                     }
                 }
@@ -204,7 +204,7 @@ fun LoginScreen(
                         .height(56.dp),
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MasjidSurface,
+                        containerColor = AyatQuSurface,
                         contentColor = Color.White
                     )
                 ) {
@@ -255,7 +255,7 @@ fun LoginScreen(
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = MasjidTextDark
+                            color = AyatQuTextDark
                         )
                     }
                 }

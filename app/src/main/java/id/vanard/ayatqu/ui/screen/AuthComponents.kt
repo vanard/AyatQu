@@ -37,9 +37,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.vanard.ayatqu.core.ui.theme.BorderSubtle
-import id.vanard.ayatqu.core.ui.theme.MasjidInputBg
-import id.vanard.ayatqu.core.ui.theme.MasjidTextDark
-import id.vanard.ayatqu.core.ui.theme.MasjidTextStrong
+import id.vanard.ayatqu.core.ui.theme.AyatQuInputBg
+import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
+import id.vanard.ayatqu.core.ui.theme.AyatQuTextStrong
 import id.vanard.ayatqu.core.ui.theme.TextHint
 
 // ── Background ────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ fun AuthLogo() {
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = "masjid",
+            text = "Ayat Qu",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
@@ -119,11 +119,11 @@ fun BackButtonDark(onClick: () -> Unit) {
         modifier = Modifier
             .size(32.dp)
             .clip(CircleShape)
-            .background(MasjidInputBg),
+            .background(AyatQuInputBg),
         contentAlignment = Alignment.Center
     ) {
         IconButton(onClick = onClick) {
-            ArrowBackIcon(color = MasjidTextStrong)
+            ArrowBackIcon(color = AyatQuTextStrong)
         }
     }
 }
@@ -189,10 +189,10 @@ fun AuthInputField(
         trailingIcon = trailingIcon,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = MasjidInputBg,
+            unfocusedContainerColor = AyatQuInputBg,
             focusedContainerColor = Color.White,
             unfocusedBorderColor = BorderSubtle,
-            focusedBorderColor = MasjidTextStrong,
+            focusedBorderColor = AyatQuTextStrong,
         ),
         modifier = modifier.fillMaxWidth()
     )
@@ -232,7 +232,7 @@ fun SocialButton(
         shape = CircleShape,
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.White,
-            contentColor = MasjidTextDark
+            contentColor = AyatQuTextDark
         ),
         border = BorderStroke(1.dp, BorderSubtle)
     ) {
@@ -241,7 +241,7 @@ fun SocialButton(
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
-            color = MasjidTextStrong
+            color = AyatQuTextStrong
         )
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.visible
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,8 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.core.ui.theme.BorderSubtle
-import id.vanard.ayatqu.core.ui.theme.MasjidSurface
-import id.vanard.ayatqu.core.ui.theme.MasjidTextDark
+import id.vanard.ayatqu.core.ui.theme.AyatQuSurface
+import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
 import id.vanard.ayatqu.core.ui.theme.TextHint
 
 @Composable
@@ -89,7 +90,10 @@ fun LandingScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Logo
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.visible(false)
+                ) {
                     Box(
                         modifier = Modifier
                             .size(24.dp)
@@ -99,7 +103,7 @@ fun LandingScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "masjid",
+                        text = "Ayat Qu",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         fontStyle = FontStyle.Italic,
@@ -132,7 +136,7 @@ fun LandingScreen(
 
                 // Headline
                 Text(
-                    text = "MASJID\nEVENTS\nCOMMUNITY",
+                    text = "AYAT QU",
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
@@ -165,7 +169,7 @@ fun LandingScreen(
                         .height(60.dp),
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MasjidSurface,
+                        containerColor = AyatQuSurface,
                         contentColor = Color.White
                     )
                 ) {
@@ -189,7 +193,7 @@ fun LandingScreen(
                     shape = CircleShape,
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color.White,
-                        contentColor = MasjidTextDark
+                        contentColor = AyatQuTextDark
                     ),
                     border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
                 ) {
