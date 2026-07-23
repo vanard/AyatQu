@@ -1,18 +1,26 @@
 package id.vanard.ayatqu.viewmodel
 
 import android.app.Application
-import android.content.ComponentName
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaSession
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.data.local.AyahAudioCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.domain.model.Ayah
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.domain.repository.QuranRepository
-import id.vanard.ayatqu.service.QuranPlaybackService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,46 +53,36 @@ class DetailSurahViewModel(
     private val _uiState = MutableStateFlow(DetailSurahUiState())
     val uiState: StateFlow<DetailSurahUiState> = _uiState.asStateFlow()
 
-    private var controller: MediaController? = null
+    private val exoPlayer: ExoPlayer = ExoPlayer.Builder(application)
+        .setAudioAttributes(AudioAttributes.DEFAULT, true)
+        .setHandleAudioBecomingNoisy(true)
+        .setWakeMode(C.WAKE_MODE_NETWORK)
+        .build()
+
+    private val mediaSession: MediaSession = MediaSession.Builder(application, exoPlayer).build()
+
     private var surahNumber: Int = 0
 
     init {
-        try {
-            val sessionToken = SessionToken(
-                application,
-                ComponentName(application, QuranPlaybackService::class.java),
-            )
-            val controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
-            controllerFuture.addListener({
-                runCatching {
-                    val ctrl = controllerFuture.get()
-                    controller = ctrl
-                    ctrl.addListener(playerListener)
+        exoPlayer.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                when (playbackState) {
+                    Player.STATE_BUFFERING -> _uiState.update { it.copy(isPreparingAudio = true) }
+                    Player.STATE_READY -> _uiState.update { it.copy(isPreparingAudio = false) }
+                    Player.STATE_ENDED -> {
+                        _uiState.update { it.copy(isPreparingAudio = false) }
+                        playNextAyah()
+                    }
                 }
-            }, { it.run() })
-        } catch (_: Exception) {
-            // Service may not be available yet; playback will be disabled
-        }
-    }
+            }
 
-    private val playerListener = object : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            when (playbackState) {
-                Player.STATE_BUFFERING -> _uiState.update { it.copy(isPreparingAudio = true) }
-                Player.STATE_READY -> _uiState.update { it.copy(isPreparingAudio = false) }
-                Player.STATE_ENDED -> {
-                    _uiState.update { it.copy(isPreparingAudio = false) }
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (!isPlaying && exoPlayer.currentPosition >= exoPlayer.duration - 500) {
                     playNextAyah()
                 }
+                updateNotification(isPlaying)
             }
-        }
-
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            val ctrl = controller ?: return
-            if (!isPlaying && ctrl.currentPosition >= ctrl.duration - 500) {
-                playNextAyah()
-            }
-        }
+        })
     }
 
     fun loadSurah(number: Int) {
@@ -133,30 +131,34 @@ class DetailSurahViewModel(
     }
 
     fun playAyah(ayahNumber: Int) {
-        val ctrl = controller ?: return
         val state = _uiState.value
 
         if (ayahNumber !in state.downloadedAyahs) return
 
         if (state.playingAyah == ayahNumber) {
-            ctrl.pause()
+            exoPlayer.pause()
             _uiState.update { it.copy(playingAyah = null) }
             return
         }
 
+        exoPlayer.stop()
+
         val localPath = audioCache.getLocalPath(surahNumber, ayahNumber) ?: return
         val surahName = state.surah?.nameEnglish ?: "Surah $surahNumber"
 
-        val mediaItem = QuranPlaybackService.buildMediaItem(
-            localPath = localPath,
-            surahNumber = surahNumber,
-            ayahNumber = ayahNumber,
-            surahName = surahName,
-        )
+        val mediaItem = MediaItem.Builder()
+            .setUri("file://$localPath")
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle("$surahName - Ayah $ayahNumber")
+                    .setArtist("Quran")
+                    .build()
+            )
+            .build()
 
-        ctrl.setMediaItem(mediaItem)
-        ctrl.prepare()
-        ctrl.play()
+        exoPlayer.setMediaItem(mediaItem)
+        exoPlayer.prepare()
+        exoPlayer.play()
 
         _uiState.update { it.copy(playingAyah = ayahNumber) }
     }
@@ -169,12 +171,14 @@ class DetailSurahViewModel(
             playAyah(next)
         } else {
             _uiState.update { it.copy(playingAyah = null) }
+            cancelNotification()
         }
     }
 
     fun stopPlayback() {
-        controller?.stop()
+        exoPlayer.stop()
         _uiState.update { it.copy(playingAyah = null) }
+        cancelNotification()
     }
 
     fun downloadAyah(ayahNumber: Int) {
@@ -271,9 +275,60 @@ class DetailSurahViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
+    // ── Notification ────────────────────────────────────────────────────────────
+
+    private fun updateNotification(isPlaying: Boolean) {
+        val ctx = getApplication<Application>()
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (isPlaying) {
+            createNotificationChannel(nm)
+            val state = _uiState.value
+            val title = state.surah?.nameEnglish ?: "Quran"
+            val ayah = state.playingAyah ?: return
+
+            val notification = NotificationCompat.Builder(ctx, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_home)
+                .setContentTitle(title)
+                .setContentText("Playing Ayah $ayah")
+                .setOngoing(true)
+                .setSilent(true)
+                .build()
+
+            nm.notify(NOTIFICATION_ID, notification)
+        } else {
+            nm.cancel(NOTIFICATION_ID)
+        }
+    }
+
+    private fun cancelNotification() {
+        val ctx = getApplication<Application>()
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.cancel(NOTIFICATION_ID)
+    }
+
+    private fun createNotificationChannel(manager: NotificationManager) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Quran Playback",
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply {
+                description = "Shows currently playing ayah"
+            }
+            manager.createNotificationChannel(channel)
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
-        controller?.removeListener(playerListener)
-        controller?.release()
+        cancelNotification()
+        exoPlayer.release()
+        mediaSession.release()
+    }
+
+    companion object {
+        private const val CHANNEL_ID = "quran_playback_channel"
+        private const val NOTIFICATION_ID = 2001
     }
 }
