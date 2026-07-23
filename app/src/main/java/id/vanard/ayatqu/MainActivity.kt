@@ -54,12 +54,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (startDestination != StartDestination.Loading) {
-                    AppNavGraph(
-                        startDestination = startDestination,
-                        onOnboardingFinished = viewModel::completeOnboarding
-                    )
-                }
+                AppNavGraph(
+                    startDestination = startDestination,
+                    onOnboardingFinished = viewModel::completeOnboarding
+                )
             }
         }
     }

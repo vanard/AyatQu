@@ -1,6 +1,7 @@
 package id.vanard.ayatqu.data.remote
 
 import id.vanard.ayatqu.data.remote.dto.AyahResponse
+import id.vanard.ayatqu.data.remote.dto.AudioResponse
 import id.vanard.ayatqu.data.remote.dto.SurahDetailResponse
 import id.vanard.ayatqu.data.remote.dto.SurahListResponse
 import retrofit2.http.GET
@@ -27,4 +28,11 @@ interface QuranApiService {
         @Path("surahNumber") surahNumber: Int,
         @Path("ayahNumber") ayahNumber: Int,
     ): AyahResponse
+
+    /** Get audio URL for a specific ayah (lightweight — no verse/translation data) */
+    @GET("quran/audio/{surahNumber}/{ayahNumber}")
+    suspend fun getAyahAudio(
+        @Path("surahNumber") surahNumber: Int,
+        @Path("ayahNumber") ayahNumber: Int,
+    ): AudioResponse
 }

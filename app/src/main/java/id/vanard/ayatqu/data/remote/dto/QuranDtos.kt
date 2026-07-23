@@ -86,3 +86,17 @@ data class AyahAudioDto(
     @SerializedName("surah_audio") val surahAudio: String,
     @SerializedName("ayah_audio") val ayahAudio: String?,
 )
+
+// ── Lightweight audio endpoint ────────────────────────────────────────────────
+
+data class AudioResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("data") val data: AudioData,
+)
+
+data class AudioData(
+    @SerializedName("surah") val surah: Int,
+    @SerializedName("ayah") val ayah: Int,
+    @SerializedName("audio") val audio: String,
+    @SerializedName("reciter") val reciter: String?,
+)
