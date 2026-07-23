@@ -52,6 +52,7 @@ import id.vanard.ayatqu.ui.screen.HomeScreen
 import id.vanard.ayatqu.ui.screen.LandingScreen
 import id.vanard.ayatqu.ui.screen.LoginScreen
 import id.vanard.ayatqu.ui.screen.OnboardingScreen
+import id.vanard.ayatqu.ui.screen.DetailSurahScreen
 import id.vanard.ayatqu.ui.screen.ProfileScreen
 import id.vanard.ayatqu.ui.screen.QuranScreen
 import id.vanard.ayatqu.ui.screen.SignUpScreen
@@ -62,6 +63,7 @@ private const val ROUTE_LANDING    = "landing"
 private const val ROUTE_LOGIN      = "login"
 private const val ROUTE_SIGNUP     = "signup"
 private const val ROUTE_MAIN       = "main"
+private const val ROUTE_SURAH      = "surah/{surahNumber}"
 
 // ── Bottom nav design tokens ──────────────────────────────────────────────────
 private val NavBarSurface       = Color(0xFFFFFFFF)
@@ -165,6 +167,18 @@ fun AppNavGraph(
                 },
                 onLoginClick = { navController.navigate(ROUTE_LOGIN) },
                 onSignUpClick = { navController.navigate(ROUTE_SIGNUP) },
+                onSurahClick = { surahNumber ->
+                    navController.navigate("surah/$surahNumber")
+                },
+            )
+        }
+
+        // ── Detail Surah ──────────────────────────────────────────────────────
+        composable(ROUTE_SURAH) { backStackEntry ->
+            val surahNumber = backStackEntry.arguments?.getString("surahNumber")?.toIntOrNull() ?: 1
+            DetailSurahScreen(
+                surahNumber = surahNumber,
+                onBackClick = { navController.popBackStack() },
             )
         }
     }
@@ -177,6 +191,7 @@ private fun MainScreen(
     onLogout: () -> Unit = {},
     onLoginClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
+    onSurahClick: (Int) -> Unit = {},
 ) {
     var current by rememberSaveable { mutableStateOf(BottomNavDestination.HOME) }
 
@@ -184,7 +199,7 @@ private fun MainScreen(
         Box(modifier = Modifier.weight(1f)) {
             when (current) {
                 BottomNavDestination.HOME    -> HomeScreen()
-                BottomNavDestination.QURAN   -> QuranScreen()
+                BottomNavDestination.QURAN   -> QuranScreen(onSurahClick = onSurahClick)
                 BottomNavDestination.PROFILE -> ProfileScreen(
                     onLogout = onLogout,
                     onLoginClick = onLoginClick,
