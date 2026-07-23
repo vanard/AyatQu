@@ -1,11 +1,6 @@
 package id.vanard.ayatqu.viewmodel
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.AudioAttributes
@@ -15,12 +10,12 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
-import id.vanard.ayatqu.R
 import id.vanard.ayatqu.data.local.AyahAudioCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.domain.model.Ayah
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.domain.repository.QuranRepository
+import id.vanard.ayatqu.service.PlaybackForegroundService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,7 +75,6 @@ class DetailSurahViewModel(
                 if (!isPlaying && exoPlayer.currentPosition >= exoPlayer.duration - 500) {
                     playNextAyah()
                 }
-                updateNotification(isPlaying)
             }
         })
     }
@@ -138,6 +132,7 @@ class DetailSurahViewModel(
         if (state.playingAyah == ayahNumber) {
             exoPlayer.pause()
             _uiState.update { it.copy(playingAyah = null) }
+            PlaybackForegroundService.stop(getApplication())
             return
         }
 
@@ -161,6 +156,13 @@ class DetailSurahViewModel(
         exoPlayer.play()
 
         _uiState.update { it.copy(playingAyah = ayahNumber) }
+
+        // Start foreground service to keep alive when screen locked
+        PlaybackForegroundService.start(
+            context = getApplication(),
+            title = surahName,
+            text = "Playing Ayah $ayahNumber",
+        )
     }
 
     private fun playNextAyah() {
@@ -171,14 +173,14 @@ class DetailSurahViewModel(
             playAyah(next)
         } else {
             _uiState.update { it.copy(playingAyah = null) }
-            cancelNotification()
+            PlaybackForegroundService.stop(getApplication())
         }
     }
 
     fun stopPlayback() {
         exoPlayer.stop()
         _uiState.update { it.copy(playingAyah = null) }
-        cancelNotification()
+        PlaybackForegroundService.stop(getApplication())
     }
 
     fun downloadAyah(ayahNumber: Int) {
@@ -275,60 +277,10 @@ class DetailSurahViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
-    // ── Notification ────────────────────────────────────────────────────────────
-
-    private fun updateNotification(isPlaying: Boolean) {
-        val ctx = getApplication<Application>()
-        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (isPlaying) {
-            createNotificationChannel(nm)
-            val state = _uiState.value
-            val title = state.surah?.nameEnglish ?: "Quran"
-            val ayah = state.playingAyah ?: return
-
-            val notification = NotificationCompat.Builder(ctx, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_home)
-                .setContentTitle(title)
-                .setContentText("Playing Ayah $ayah")
-                .setOngoing(true)
-                .setSilent(true)
-                .build()
-
-            nm.notify(NOTIFICATION_ID, notification)
-        } else {
-            nm.cancel(NOTIFICATION_ID)
-        }
-    }
-
-    private fun cancelNotification() {
-        val ctx = getApplication<Application>()
-        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.cancel(NOTIFICATION_ID)
-    }
-
-    private fun createNotificationChannel(manager: NotificationManager) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Quran Playback",
-                NotificationManager.IMPORTANCE_LOW,
-            ).apply {
-                description = "Shows currently playing ayah"
-            }
-            manager.createNotificationChannel(channel)
-        }
-    }
-
     override fun onCleared() {
         super.onCleared()
-        cancelNotification()
+        PlaybackForegroundService.stop(getApplication())
         exoPlayer.release()
         mediaSession.release()
-    }
-
-    companion object {
-        private const val CHANNEL_ID = "quran_playback_channel"
-        private const val NOTIFICATION_ID = 2001
     }
 }

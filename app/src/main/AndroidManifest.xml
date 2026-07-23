@@ -52,7 +52,7 @@
         </receiver>
 
         <service
-            android:name=".service.QuranPlaybackService"
+            android:name=".service.PlaybackForegroundService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
 
