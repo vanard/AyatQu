@@ -25,7 +25,7 @@ data class HomeUiState(
     val prayerTimes: List<PrayerTime> = emptyList(),
     val isPrayerTimesLoading: Boolean = false,
     val prayerTimesError: String? = null,
-    val locationLabel: String = "Your Location",
+    val timezone: String? = null,
     val isLocationLoading: Boolean = false,
     val locationError: String? = null,
 )
@@ -66,12 +66,15 @@ class HomeViewModel(
         viewModelScope.launch {
             val cachedTimes = prayerTimeCache.cachedPrayerTimes.first()
             val cachedLocation = prayerTimeCache.getCachedLocation()
+            val cachedTimezone = prayerTimeCache.getCachedTimezone()
 
             if (!cachedTimes.isNullOrEmpty()) {
                 _uiState.update {
                     it.copy(
                         prayerTimes = cachedTimes,
-                        locationLabel = cachedLocation?.third ?: it.locationLabel,
+                        timezone = cachedTimezone?.toCityName() ?: cachedLocation?.let { loc ->
+                            "%.2f, %.2f".format(loc.first, loc.second)
+                        },
                     )
                 }
             }
@@ -82,6 +85,7 @@ class HomeViewModel(
         viewModelScope.launch {
             val cachedTimes = prayerTimeCache.cachedPrayerTimes.first()
             val cachedLocation = prayerTimeCache.getCachedLocation()
+            val cachedTimezone = prayerTimeCache.getCachedTimezone()
             val hasCache = !cachedTimes.isNullOrEmpty()
 
             // Show cached data immediately if available (no loading spinner)
@@ -89,7 +93,9 @@ class HomeViewModel(
                 _uiState.update {
                     it.copy(
                         prayerTimes = cachedTimes,
-                        locationLabel = cachedLocation?.third ?: it.locationLabel,
+                        timezone = cachedTimezone?.toCityName() ?: cachedLocation?.let { loc ->
+                            "%.2f, %.2f".format(loc.first, loc.second)
+                        },
                         locationError = null,
                         prayerTimesError = null,
                     )
@@ -107,29 +113,21 @@ class HomeViewModel(
 
     private suspend fun fetchFreshPrayerTimes(
         hasCache: Boolean,
-        cachedLocation: Triple<Double?, Double?, String?>?,
+        cachedLocation: Pair<Double, Double>?,
         fetchLocation: Boolean = true,
     ) {
         if (cachedLocation != null) {
-            // Use cached coordinates — no location loading needed
-            val lat = cachedLocation.first!!
-            val lng = cachedLocation.second!!
             fetchPrayerTimesByCoordinates(
-                lat = lat,
-                lng = lng,
-                label = cachedLocation.third,
+                lat = cachedLocation.first,
+                lng = cachedLocation.second,
                 hasCache = hasCache,
             )
         } else {
-            // No cached coordinates — need to get location
             if (fetchLocation) {
                 fetchLocationAndThenPrayerTimes(hasCache = hasCache)
             } else {
-                // Permission not granted — skip location, use city fallback
                 _uiState.update {
-                    it.copy(
-                        locationError = "Location permission not granted",
-                    )
+                    it.copy(locationError = "Location permission not granted")
                 }
                 loadPrayerTimesByCity(hasCache = hasCache)
             }
@@ -137,23 +135,16 @@ class HomeViewModel(
     }
 
     private suspend fun fetchLocationAndThenPrayerTimes(hasCache: Boolean) {
-        // Show location loading only if we don't have prayer times to show yet
         if (!hasCache) {
             _uiState.update { it.copy(isLocationLoading = true, locationError = null) }
         }
 
-        val result = locationHelper.getCurrentLocation()
-
-        when (result) {
+        when (val result = locationHelper.getCurrentLocation()) {
             is LocationFetchResult.Success -> {
                 _uiState.update { it.copy(isLocationLoading = false, locationError = null) }
-                val label = locationHelper.reverseGeocode(
-                    application, result.location.latitude, result.location.longitude,
-                )
                 fetchPrayerTimesByCoordinates(
                     lat = result.location.latitude,
                     lng = result.location.longitude,
-                    label = label,
                     hasCache = hasCache,
                 )
             }
@@ -161,13 +152,9 @@ class HomeViewModel(
                 val lastKnown = locationHelper.getLastKnownLocation()
                 if (lastKnown != null) {
                     _uiState.update { it.copy(isLocationLoading = false, locationError = null) }
-                    val label = locationHelper.reverseGeocode(
-                        application, lastKnown.latitude, lastKnown.longitude,
-                    )
                     fetchPrayerTimesByCoordinates(
                         lat = lastKnown.latitude,
                         lng = lastKnown.longitude,
-                        label = label,
                         hasCache = hasCache,
                     )
                 } else {
@@ -184,13 +171,9 @@ class HomeViewModel(
                 val lastKnown = locationHelper.getLastKnownLocation()
                 if (lastKnown != null) {
                     _uiState.update { it.copy(isLocationLoading = false, locationError = null) }
-                    val label = locationHelper.reverseGeocode(
-                        application, lastKnown.latitude, lastKnown.longitude,
-                    )
                     fetchPrayerTimesByCoordinates(
                         lat = lastKnown.latitude,
                         lng = lastKnown.longitude,
-                        label = label,
                         hasCache = hasCache,
                     )
                 } else {
@@ -218,7 +201,6 @@ class HomeViewModel(
     private suspend fun fetchPrayerTimesByCoordinates(
         lat: Double,
         lng: Double,
-        label: String?,
         hasCache: Boolean,
     ) {
         if (!hasCache) {
@@ -228,16 +210,14 @@ class HomeViewModel(
         prayerTimeRepository.getPrayerTimesByCoordinates(
             latitude = lat,
             longitude = lng,
-            locationLabel = label,
-        ).onSuccess { times ->
+        ).onSuccess { result ->
             _uiState.update {
                 it.copy(
                     isPrayerTimesLoading = false,
-                    prayerTimes = times,
-                    locationLabel = label ?: it.locationLabel,
+                    prayerTimes = result.prayerTimes,
+                    timezone = result.timezone?.toCityName() ?: "%.2f, %.2f".format(lat, lng),
                 )
             }
-            // Re-schedule adhan alarms with fresh prayer times
             AdhanSchedulerWorker.runNow(application)
         }.onFailure { e ->
             if (!hasCache) {
@@ -259,15 +239,14 @@ class HomeViewModel(
         prayerTimeRepository.getPrayerTimes(
             city = "Jakarta",
             country = "Indonesia",
-        ).onSuccess { times ->
+        ).onSuccess { result ->
             _uiState.update {
                 it.copy(
                     isPrayerTimesLoading = false,
-                    prayerTimes = times,
-                    locationLabel = "Jakarta",
+                    prayerTimes = result.prayerTimes,
+                    timezone = result.timezone?.toCityName(),
                 )
             }
-            // Re-schedule adhan alarms with fresh prayer times
             AdhanSchedulerWorker.runNow(application)
         }.onFailure { e ->
             if (!hasCache) {
@@ -292,4 +271,6 @@ class HomeViewModel(
         }
         loadPrayerTimesWithLocation(fetchLocation = fetchLocation)
     }
+
+    private fun String.toCityName(): String =substringAfterLast("/").replace("_", " ")
 }

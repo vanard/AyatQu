@@ -14,7 +14,9 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
 import kotlin.coroutines.resume
@@ -149,27 +151,35 @@ class LocationHelper(context: Context) {
     /**
      * Reverse geocode latitude/longitude to a human-readable place name.
      * Returns a city/country string or formatted coordinates as fallback.
+     * Uses the modern listener-based Geocoder API for reliability.
      */
-    fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String {
-        return try {
-            val geocoder = Geocoder(context, Locale.getDefault())
-            @Suppress("DEPRECATION")
-            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-            if (!addresses.isNullOrEmpty()) {
-                val addr = addresses[0]
-                val city = addr.locality ?: addr.subAdminArea ?: ""
-                val country = addr.countryName ?: ""
-                when {
-                    city.isNotEmpty() && country.isNotEmpty() -> "$city, $country"
-                    city.isNotEmpty() -> city
-                    country.isNotEmpty() -> country
-                    else -> "%.2f, %.2f".format(latitude, longitude)
+    suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String {
+        return withContext(Dispatchers.Main) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val result = suspendCancellableCoroutine { continuation ->
+                    geocoder.getFromLocation(latitude, longitude, 1) { addresses ->
+                        if (continuation.isActive) {
+                            continuation.resume(addresses)
+                        }
+                    }
                 }
-            } else {
+                if (!result.isNullOrEmpty()) {
+                    val addr = result[0]
+                    val city = addr.locality ?: addr.subAdminArea ?: ""
+                    val country = addr.countryName ?: ""
+                    when {
+                        city.isNotEmpty() && country.isNotEmpty() -> "$city, $country"
+                        city.isNotEmpty() -> city
+                        country.isNotEmpty() -> country
+                        else -> "%.2f, %.2f".format(latitude, longitude)
+                    }
+                } else {
+                    "%.2f, %.2f".format(latitude, longitude)
+                }
+            } catch (_: Exception) {
                 "%.2f, %.2f".format(latitude, longitude)
             }
-        } catch (_: Exception) {
-            "%.2f, %.2f".format(latitude, longitude)
         }
     }
 }

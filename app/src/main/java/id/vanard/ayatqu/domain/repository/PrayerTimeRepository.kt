@@ -1,12 +1,11 @@
 package id.vanard.ayatqu.domain.repository
 
-import id.vanard.ayatqu.domain.model.PrayerTime
+import id.vanard.ayatqu.domain.model.PrayerTimesResult
 
 interface PrayerTimeRepository {
-    suspend fun getPrayerTimes(city: String, country: String): Result<List<PrayerTime>>
+    suspend fun getPrayerTimes(city: String, country: String): Result<PrayerTimesResult>
     suspend fun getPrayerTimesByCoordinates(
         latitude: Double,
         longitude: Double,
-        locationLabel: String? = null,
-    ): Result<List<PrayerTime>>
+    ): Result<PrayerTimesResult>
 }

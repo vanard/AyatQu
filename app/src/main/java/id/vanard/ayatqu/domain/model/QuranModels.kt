@@ -38,3 +38,8 @@ data class PrayerTime(
     val name: String,
     val time: String,
 )
+
+data class PrayerTimesResult(
+    val prayerTimes: List<PrayerTime>,
+    val timezone: String?,
+)

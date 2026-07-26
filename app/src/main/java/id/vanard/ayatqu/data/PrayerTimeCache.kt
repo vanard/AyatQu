@@ -20,7 +20,7 @@ class PrayerTimeCache(context: Context) {
     private val lastFetchTimestampKey = longPreferencesKey("prayer_times_timestamp")
     private val latitudeKey = stringPreferencesKey("prayer_times_latitude")
     private val longitudeKey = stringPreferencesKey("prayer_times_longitude")
-    private val locationLabelKey = stringPreferencesKey("prayer_times_location_label")
+    private val timezoneKey = stringPreferencesKey("prayer_times_timezone")
 
     val cachedPrayerTimes: Flow<List<PrayerTime>?> = dataStore.data.map { prefs ->
         val json = prefs[prayerTimesKey] ?: return@map null
@@ -31,7 +31,7 @@ class PrayerTimeCache(context: Context) {
         prayerTimes: List<PrayerTime>,
         latitude: Double? = null,
         longitude: Double? = null,
-        locationLabel: String? = null,
+        timezone: String? = null,
     ) {
         val today = getCurrentDate()
         val timestamp = System.currentTimeMillis()
@@ -43,7 +43,7 @@ class PrayerTimeCache(context: Context) {
             prefs[lastFetchTimestampKey] = timestamp
             latitude?.let { prefs[latitudeKey] = it.toString() }
             longitude?.let { prefs[longitudeKey] = it.toString() }
-            locationLabel?.let { prefs[locationLabelKey] = it }
+            timezone?.let { prefs[timezoneKey] = it }
         }
     }
 
@@ -61,12 +61,17 @@ class PrayerTimeCache(context: Context) {
         }.first()
     }
 
-    suspend fun getCachedLocation(): Triple<Double?, Double?, String?>? {
+    suspend fun getCachedLocation(): Pair<Double, Double>? {
         return dataStore.data.map { prefs ->
             val lat = prefs[latitudeKey]?.toDoubleOrNull()
             val lng = prefs[longitudeKey]?.toDoubleOrNull()
-            val label = prefs[locationLabelKey]
-            if (lat != null && lng != null) Triple(lat, lng, label) else null
+            if (lat != null && lng != null) Pair(lat, lng) else null
+        }.first()
+    }
+
+    suspend fun getCachedTimezone(): String? {
+        return dataStore.data.map { prefs ->
+            prefs[timezoneKey]
         }.first()
     }
 
@@ -77,7 +82,7 @@ class PrayerTimeCache(context: Context) {
             prefs.remove(lastFetchTimestampKey)
             prefs.remove(latitudeKey)
             prefs.remove(longitudeKey)
-            prefs.remove(locationLabelKey)
+            prefs.remove(timezoneKey)
         }
     }
 

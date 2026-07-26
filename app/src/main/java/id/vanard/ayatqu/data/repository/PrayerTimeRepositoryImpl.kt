@@ -4,6 +4,7 @@ import id.vanard.ayatqu.data.PrayerTimeCache
 import id.vanard.ayatqu.data.remote.PrayerTimeApiService
 import id.vanard.ayatqu.data.remote.dto.PrayerTimingsDto
 import id.vanard.ayatqu.domain.model.PrayerTime
+import id.vanard.ayatqu.domain.model.PrayerTimesResult
 import id.vanard.ayatqu.domain.repository.PrayerTimeRepository
 import id.vanard.ayatqu.util.NetworkUtils
 import kotlinx.coroutines.Dispatchers
@@ -17,84 +18,61 @@ class PrayerTimeRepositoryImpl(
     private val cache: PrayerTimeCache,
 ) : PrayerTimeRepository {
 
-    override suspend fun getPrayerTimes(city: String, country: String): Result<List<PrayerTime>> =
+    override suspend fun getPrayerTimes(city: String, country: String): Result<PrayerTimesResult> =
         withContext(Dispatchers.IO) {
             runCatching {
-                // Check cache first - offline first approach
-                val cachedTimes = cache.cachedPrayerTimes.first()
-                val isCacheValid = cache.isCacheValid()
-
-                // Return cached data if valid (fetched today)
-                if (isCacheValid && !cachedTimes.isNullOrEmpty()) {
-                    return@runCatching cachedTimes
-                }
-
-                // Cache is stale or empty, fetch from API
                 if (!networkUtils.isNetworkAvailable()) {
-                    // If offline and no cache, throw error
-                    if (cachedTimes.isNullOrEmpty()) {
-                        throw IOException("No internet connection and no cached prayer times available.")
+                    val cachedTimes = cache.cachedPrayerTimes.first()
+                    if (!cachedTimes.isNullOrEmpty()) {
+                        val cachedTimezone = cache.getCachedTimezone()
+                        return@runCatching PrayerTimesResult(cachedTimes, cachedTimezone)
                     }
-                    // If offline but have old cache, return it
-                    return@runCatching cachedTimes
+                    throw IOException("No internet connection and no cached prayer times available.")
                 }
 
-                // Fetch from API
                 val response = api.getPrayerTimesByCity(city = city, country = country)
                 val prayerTimes = response.data.timings.toPrayerTimes()
+                val timezone = response.data.meta?.timezone
 
-                // Save to cache with city label
                 cache.savePrayerTimes(
                     prayerTimes = prayerTimes,
-                    locationLabel = city,
+                    timezone = timezone,
                 )
 
-                prayerTimes
+                PrayerTimesResult(prayerTimes, timezone)
             }
         }
 
     override suspend fun getPrayerTimesByCoordinates(
         latitude: Double,
         longitude: Double,
-        locationLabel: String?,
-    ): Result<List<PrayerTime>> =
+    ): Result<PrayerTimesResult> =
         withContext(Dispatchers.IO) {
             runCatching {
-                // Check cache first - offline first approach
-                val cachedTimes = cache.cachedPrayerTimes.first()
-                val isCacheValid = cache.isCacheValid()
-
-                // Return cached data if valid (fetched today)
-                if (isCacheValid && !cachedTimes.isNullOrEmpty()) {
-                    return@runCatching cachedTimes
-                }
-
-                // Cache is stale or empty, fetch from API
                 if (!networkUtils.isNetworkAvailable()) {
-                    // If offline and no cache, throw error
-                    if (cachedTimes.isNullOrEmpty()) {
-                        throw IOException("No internet connection and no cached prayer times available.")
+                    val cachedTimes = cache.cachedPrayerTimes.first()
+                    if (!cachedTimes.isNullOrEmpty()) {
+                        val cachedTimezone = cache.getCachedTimezone()
+                        return@runCatching PrayerTimesResult(cachedTimes, cachedTimezone)
                     }
-                    // If offline but have old cache, return it
-                    return@runCatching cachedTimes
+                    throw IOException("No internet connection and no cached prayer times available.")
                 }
 
-                // Fetch from API
                 val response = api.getPrayerTimesByCoordinates(
                     latitude = latitude,
                     longitude = longitude,
                 )
                 val prayerTimes = response.data.timings.toPrayerTimes()
+                val timezone = response.data.meta?.timezone
 
-                // Save to cache with location data
                 cache.savePrayerTimes(
                     prayerTimes = prayerTimes,
                     latitude = latitude,
                     longitude = longitude,
-                    locationLabel = locationLabel ?: "%.2f, %.2f".format(latitude, longitude),
+                    timezone = timezone,
                 )
 
-                prayerTimes
+                PrayerTimesResult(prayerTimes, timezone)
             }
         }
 
