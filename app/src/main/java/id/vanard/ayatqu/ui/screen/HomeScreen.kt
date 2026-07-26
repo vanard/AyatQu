@@ -2,6 +2,7 @@ package id.vanard.ayatqu.ui.screen
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -32,12 +34,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.LastRead
 import id.vanard.ayatqu.domain.model.PrayerTime
@@ -69,6 +76,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
     authViewModel: id.vanard.ayatqu.viewmodel.AuthViewModel = koinViewModel(),
     onLastReadClick: (surahNumber: Int, ayahNumber: Int) -> Unit = { _, _ -> },
+    onQiblaClick: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
@@ -123,6 +131,7 @@ fun HomeScreen(
         isNetworkAvailable = isNetworkAvailable,
         userName = userName,
         onLastReadClick = onLastReadClick,
+        onQiblaClick = onQiblaClick,
         onRetry = viewModel::retryPrayerTimes,
     )
 }
@@ -135,6 +144,7 @@ internal fun HomeScreenContent(
     isNetworkAvailable: Boolean = true,
     userName: String = "Guest",
     onLastReadClick: (surahNumber: Int, ayahNumber: Int) -> Unit = { _, _ -> },
+    onQiblaClick: () -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
     Column(
@@ -146,7 +156,7 @@ internal fun HomeScreenContent(
             .padding(horizontal = 24.dp),
     ) {
         // ── Header ────────────────────────────────────────────────────────────
-        HomeHeader(userName = userName)
+        HomeHeader(userName = userName, onQiblaClick = onQiblaClick)
 
         Spacer(Modifier.height(8.dp))
 
@@ -167,7 +177,7 @@ internal fun HomeScreenContent(
             isLoading = state.isPrayerTimesLoading,
             error = state.prayerTimesError,
             isNetworkAvailable = isNetworkAvailable,
-            locationLabel = state.locationLabel,
+            timezone = state.timezone,
             locationError = state.locationError,
             isLocationLoading = state.isLocationLoading,
             onRetry = onRetry,
@@ -180,7 +190,7 @@ internal fun HomeScreenContent(
 // ── Header ────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun HomeHeader(userName: String) {
+private fun HomeHeader(userName: String, onQiblaClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,21 +201,35 @@ private fun HomeHeader(userName: String) {
         // Greeting on the left
         Column {
             Text(
-                text = "Welcome, ${userName.ifEmpty { "Guest" }}",
+                text = stringResource(R.string.welcome_user, userName.ifEmpty { stringResource(R.string.guest) }),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = ColorPrimary,
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = "Assalamualaikum",
+                text = stringResource(R.string.assalamualaikum),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = ColorMuted,
             )
         }
 
-        IconPlaceholder(size = 32)
+        // Compass icon — navigate to Qibla
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onQiblaClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_compass),
+                contentDescription = "Qibla",
+                tint = ColorGold,
+                modifier = Modifier.size(32.dp),
+            )
+        }
     }
 }
 
@@ -219,49 +243,50 @@ private fun LastReadCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(150.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(Brush.linearGradient(ColorCardGradient))
             .border(1.dp, ColorCardBorder, RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 25.dp, vertical = 20.dp),
+            .clickable(onClick = onClick),
     ) {
-        // Decorative mosque silhouette placeholder — right side
-        Box(
+        // Mosque silhouette — right side, semi-transparent
+        Image(
+            painter = painterResource(id = R.drawable.islamic_mosque_silhouette),
+            contentDescription = null,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .size(width = 160.dp, height = 100.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(ColorGold.copy(alpha = 0.08f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text("🕌", fontSize = 48.sp)
-        }
+                .height(150.dp)
+                .offset(x = 10.dp),
+            contentScale = ContentScale.Crop,
+            alpha = 0.3f,
+            colorFilter = ColorFilter.tint(ColorGold),
+        )
 
         // Text content
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(end = 120.dp),
+                .padding(horizontal = 25.dp, vertical = 20.dp),
         ) {
             Text(
-                text = "Last Read",
+                text = stringResource(R.string.last_read),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorGold,
+                color = ColorTextPrimary,
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = lastRead.surahName,
-                fontSize = 22.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = ColorTextPrimary,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
-                text = "AYAH NO: ${lastRead.ayahNumber}",
+                text = stringResource(R.string.ayah_no, lastRead.ayahNumber),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
-                color = ColorMuted,
+                color = ColorTextPrimary,
                 letterSpacing = 0.6.sp,
             )
         }
@@ -276,7 +301,7 @@ private fun PrayerTimesSection(
     isLoading: Boolean,
     error: String?,
     isNetworkAvailable: Boolean,
-    locationLabel: String,
+    timezone: String? = null,
     locationError: String? = null,
     isLocationLoading: Boolean = false,
     onRetry: () -> Unit,
@@ -294,14 +319,14 @@ private fun PrayerTimesSection(
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            text = "Prayer Times",
+            text = stringResource(R.string.prayer_times),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = ColorTextPrimary,
         )
         Spacer(Modifier.weight(1f))
         Text(
-            text = locationLabel,
+            text = timezone ?: stringResource(R.string.your_location),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = ColorMuted,
@@ -320,7 +345,7 @@ private fun PrayerTimesSection(
     when {
         !isNetworkAvailable && prayerTimes.isEmpty() -> {
             PrayerTimesErrorCard(
-                message = "No internet connection",
+                message = stringResource(R.string.no_internet_connection),
                 onRetry = onRetry,
             )
         }
@@ -440,7 +465,7 @@ private fun PrayerTimesErrorCard(
                 .padding(horizontal = 20.dp, vertical = 8.dp),
         ) {
             Text(
-                text = "Retry",
+                text = stringResource(R.string.retry),
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -528,7 +553,7 @@ private fun PreviewHomeFull() {
                     surahName = "Al-Baqarah",
                 ),
                 prayerTimes = samplePrayerTimes,
-                locationLabel = "Jakarta",
+                timezone = "Asia/Jakarta",
             ),
             userName = "Abdullah",
         )
@@ -547,7 +572,7 @@ private fun PreviewHomeGuest() {
                     surahName = "Al-Fatihah",
                 ),
                 prayerTimes = samplePrayerTimes,
-                locationLabel = "Jakarta",
+                timezone = "Asia/Jakarta",
             ),
             userName = "Guest",
         )
@@ -561,7 +586,7 @@ private fun PreviewHomeNoLastRead() {
         HomeScreenContent(
             state = HomeUiState(
                 prayerTimes = samplePrayerTimes,
-                locationLabel = "Jakarta",
+                timezone = "Asia/Jakarta",
             ),
             userName = "Abdullah",
         )
@@ -598,7 +623,7 @@ private fun PreviewHomeLocationError() {
             state = HomeUiState(
                 locationError = "GPS is disabled. Please enable location services.",
                 prayerTimes = samplePrayerTimes,
-                locationLabel = "Jakarta",
+                timezone = "Asia/Jakarta",
             ),
             userName = "Guest",
         )

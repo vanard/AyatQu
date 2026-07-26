@@ -47,12 +47,15 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.core.ui.theme.AyatQuSurface
 import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
 import id.vanard.ayatqu.core.ui.theme.AyatQuTextStrong
 import id.vanard.ayatqu.core.ui.theme.TextHint
+import id.vanard.ayatqu.ui.components.AppIcon
 import id.vanard.ayatqu.viewmodel.AuthEvent
 import id.vanard.ayatqu.viewmodel.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -92,11 +95,11 @@ fun LoginScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 32.dp),
+                    .statusBarsPadding(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.height(60.dp))
-                AuthLogo()
+                AppIcon()
             }
 
             // ── Bottom sheet ──────────────────────────────────────────────────
@@ -119,7 +122,7 @@ fun LoginScreen(
                     BackButtonDark(onClick = onBackClick)
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        text = "Log in",
+                        text = stringResource(R.string.log_in),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
@@ -131,7 +134,7 @@ fun LoginScreen(
                 Spacer(Modifier.height(24.dp))
 
                 Text(
-                    text = "Welcome back",
+                    text = stringResource(R.string.welcome_back),
                     style = MaterialTheme.typography.headlineSmall,
                     color = AyatQuTextDark
                 )
@@ -140,10 +143,10 @@ fun LoginScreen(
 
                 // Email
                 AuthInputField(
-                    label = "Email address",
+                    label = stringResource(R.string.email_address),
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = "you@email.com",
+                    placeholder = stringResource(R.string.email_placeholder),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                 )
 
@@ -151,17 +154,17 @@ fun LoginScreen(
 
                 // Password
                 AuthInputField(
-                    label = "Password",
+                    label = stringResource(R.string.password),
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = "••••••••",
+                    placeholder = stringResource(R.string.password_placeholder),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = if (passwordVisible) VisualTransformation.None
                     else PasswordVisualTransformation(),
                     trailingIcon = {
                         TextButton(onClick = { passwordVisible = !passwordVisible }) {
                             Text(
-                                text = if (passwordVisible) "Hide" else "Show",
+                                text = if (passwordVisible) stringResource(R.string.hide) else stringResource(R.string.show),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = AyatQuTextStrong
                             )
@@ -176,7 +179,7 @@ fun LoginScreen(
                 ) {
                     TextButton(onClick = {}) {
                         Text(
-                            text = "Forgot password?",
+                            text = stringResource(R.string.forgot_password),
                             style = MaterialTheme.typography.labelSmall,
                             color = AyatQuTextStrong
                         )
@@ -216,7 +219,7 @@ fun LoginScreen(
                         )
                     } else {
                         Text(
-                            text = "Log in",
+                            text = stringResource(R.string.log_in),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -232,7 +235,7 @@ fun LoginScreen(
                 Spacer(Modifier.height(16.dp))
 
                 SocialButton(
-                    label = "Continue with Google",
+                    label = stringResource(R.string.continue_with_google),
                     onClick = { viewModel.signInWithGoogle(context) }
                 )
 
@@ -245,13 +248,13 @@ fun LoginScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Don't have an account?",
+                        text = stringResource(R.string.no_account_prompt),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextHint
                     )
                     TextButton(onClick = onSignUpClick) {
                         Text(
-                            text = "Sign up",
+                            text = stringResource(R.string.sign_up),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),

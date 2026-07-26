@@ -3,6 +3,7 @@ package id.vanard.ayatqu.ui.screen
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -36,6 +38,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.BorderSubtle
 import id.vanard.ayatqu.core.ui.theme.AyatQuInputBg
 import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
@@ -68,30 +73,6 @@ fun AuthBackground() {
                 )
             )
     )
-}
-
-// ── Logo ──────────────────────────────────────────────────────────────────────
-
-@Composable
-fun AuthLogo() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(Color.White)
-            // TODO: replace with actual logo icon
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = "Ayat Qu",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            fontStyle = FontStyle.Italic,
-            color = Color.White,
-            letterSpacing = (-0.6).sp
-        )
-    }
 }
 
 // ── Back buttons ──────────────────────────────────────────────────────────────
@@ -208,7 +189,7 @@ fun OrDivider() {
     ) {
         HorizontalDivider(modifier = Modifier.weight(1f), color = BorderSubtle)
         Text(
-            text = "  or  ",
+            text = stringResource(R.string.or_divider),
             style = MaterialTheme.typography.labelSmall,
             color = TextHint
         )

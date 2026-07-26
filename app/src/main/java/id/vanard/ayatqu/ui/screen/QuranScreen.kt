@@ -45,6 +45,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.ui.components.NoConnectionView
@@ -66,7 +68,7 @@ private val ColorBorder         = Color(0xFFF0F2F5)
 private val ColorBadgeBg        = Color(0xFFEFF6F9)
 private val ColorTabBg          = Color(0x80F0E6D2)  // 50% opacity
 
-private val quranTabs = listOf("Surah", "Juz")
+private val quranTabs = listOf(R.string.tab_surah, R.string.tab_juz)
 
 // ── Public composable ─────────────────────────────────────────────────────────
 
@@ -138,7 +140,16 @@ internal fun QuranScreenContent(
             }
             selectedTab == 1 -> {
                 // Juz tab
-                JuzList()
+                val filteredJuz = if (state.query.isBlank()) juzData
+                else juzData.filter {
+                    it.surahName.lowercase().contains(state.query.trim().lowercase()) ||
+                        it.number.toString() == state.query.trim()
+                }
+                if (filteredJuz.isEmpty() && state.query.isNotBlank()) {
+                    EmptySearchState(query = state.query)
+                } else {
+                    JuzList(juzItems = filteredJuz)
+                }
             }
         }
     }
@@ -166,7 +177,7 @@ private fun QuranHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "AL-QURAN",
+                text = stringResource(R.string.al_quran),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = ColorPrimary,
@@ -181,61 +192,60 @@ private fun QuranHeader(
 
         Spacer(Modifier.height(16.dp))
 
-        // Search bar (only show for Surah tab)
-        if (selectedTab == 0) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(ColorBadgeBg)
-                    .border(1.dp, ColorBorder, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = MagnifyingGlass,
-                    contentDescription = null,
-                    tint = ColorMuted,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(Modifier.width(12.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    if (query.isEmpty()) {
-                        Text(
-                            text = "Search surah by name or number",
-                            fontSize = 14.sp,
-                            color = ColorMuted,
-                        )
-                    }
-                    BasicTextField(
-                        value = query,
-                        onValueChange = onQueryChange,
-                        singleLine = true,
-                        textStyle = TextStyle(
-                            fontSize = 14.sp,
-                            color = ColorTextPrimary,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        cursorBrush = SolidColor(ColorPrimary),
-                        modifier = Modifier.fillMaxWidth(),
+        // Search bar (show for both tabs)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(ColorBadgeBg)
+                .border(1.dp, ColorBorder, RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = MagnifyingGlass,
+                contentDescription = null,
+                tint = ColorMuted,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Box(modifier = Modifier.weight(1f)) {
+                if (query.isEmpty()) {
+                    Text(
+                        text = if (selectedTab == 0) stringResource(R.string.search_surah_hint)
+                        else stringResource(R.string.search_juz_hint),
+                        fontSize = 14.sp,
+                        color = ColorMuted,
                     )
                 }
-                if (query.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .clickable(onClick = onClearQuery),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = X,
-                            contentDescription = "Clear",
-                            tint = ColorMuted,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = 14.sp,
+                        color = ColorTextPrimary,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    cursorBrush = SolidColor(ColorPrimary),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (query.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onClearQuery),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = X,
+                        contentDescription = stringResource(R.string.clear),
+                        tint = ColorMuted,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
         }
@@ -246,7 +256,7 @@ private fun QuranHeader(
 
 @Composable
 private fun QuranTabRow(
-    tabs: List<String>,
+    tabs: List<Int>,
     selected: Int,
     onTabSelected: (Int) -> Unit,
 ) {
@@ -257,7 +267,7 @@ private fun QuranTabRow(
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        tabs.forEachIndexed { index, label ->
+        tabs.forEachIndexed { index, labelRes ->
             val isSelected = index == selected
             Box(
                 modifier = Modifier
@@ -268,7 +278,7 @@ private fun QuranTabRow(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = label,
+                    text = stringResource(labelRes),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = if (isSelected) ColorGold else ColorMuted,
@@ -354,7 +364,7 @@ private fun SurahRow(surah: Surah, onClick: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${surah.versesCount} AYAHS • ${surah.revelationPlace.uppercase()}",
+                text = stringResource(R.string.surah_info, surah.versesCount, surah.revelationPlace.uppercase()),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ColorPrimary,
@@ -445,9 +455,9 @@ private val juzData = listOf(
 )
 
 @Composable
-private fun JuzList() {
+private fun JuzList(juzItems: List<JuzItem> = juzData) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(items = juzData, key = { it.number }) { juz ->
+        items(items = juzItems, key = { it.number }) { juz ->
             JuzRow(juz = juz)
             HorizontalDivider(
                 modifier = Modifier.padding(start = 80.dp),
@@ -474,7 +484,7 @@ private fun JuzRow(juz: JuzItem) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Juz ${juz.number}",
+                text = stringResource(R.string.juz_number, juz.number),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ColorTextPrimary,
@@ -529,7 +539,7 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Couldn't load surahs",
+            text = stringResource(R.string.couldnt_load_surahs),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = ColorTextPrimary,
@@ -551,7 +561,7 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
                 .padding(horizontal = 24.dp, vertical = 10.dp),
         ) {
             Text(
-                text = "Try Again",
+                text = stringResource(R.string.try_again),
                 color = Color.White,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -570,7 +580,7 @@ private fun EmptySearchState(query: String) {
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "No matches for \"$query\"",
+            text = stringResource(R.string.no_matches_for, query),
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             color = ColorTextPrimary,
@@ -578,7 +588,7 @@ private fun EmptySearchState(query: String) {
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            text = "Try a different name or surah number",
+            text = stringResource(R.string.try_different_search),
             fontSize = 13.sp,
             color = ColorMuted,
             textAlign = TextAlign.Center,

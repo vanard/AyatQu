@@ -57,7 +57,7 @@ class QuranDownloadWorker(
 
                 // Update progress notification
                 val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_home)
+                    .setSmallIcon(R.drawable.home_05_stroke_rounded)
                     .setContentTitle("Downloading Surah $surahNumber")
                     .setContentText("${index + 1}/$total ayahs")
                     .setProgress(total, index + 1, false)
@@ -70,7 +70,7 @@ class QuranDownloadWorker(
 
             // Completion notification
             val done = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_home)
+                .setSmallIcon(R.drawable.home_05_stroke_rounded)
                 .setContentTitle("Download complete")
                 .setContentText("Surah $surahNumber is ready for offline listening")
                 .setAutoCancel(true)

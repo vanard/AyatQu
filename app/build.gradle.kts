@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+    implementation("androidx.appcompat:appcompat:1.7.0")
 
     // Firebase — versions managed by BOM
     implementation(platform(libs.firebase.bom))

@@ -12,10 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.visible
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -30,13 +27,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
+import id.vanard.ayatqu.ui.components.AppIcon
 import id.vanard.ayatqu.core.ui.theme.BorderSubtle
 import id.vanard.ayatqu.core.ui.theme.AyatQuSurface
 import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
@@ -50,8 +51,7 @@ fun LandingScreen(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // ── Background image placeholder ──────────────────────────────────────
-        // TODO: replace with actual mosque photo via painterResource / AsyncImage
+        // ── Background gradient ───────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -64,57 +64,19 @@ fun LandingScreen(
                 )
         )
 
-        // ── Dark scrim over image ─────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0x1A000000), Color(0x99000000)),
-                        start = Offset(0f, 0f),
-                        end = Offset(0f, Float.POSITIVE_INFINITY)
-                    )
-                )
-        )
-
         // ── Foreground content ────────────────────────────────────────────────
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // Top bar with logo and skip button
+            // Skip button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(horizontal = 32.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End,
             ) {
-                // Logo
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.visible(false)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                        // TODO: replace with actual logo icon
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Ayat Qu",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontStyle = FontStyle.Italic,
-                        color = Color.White,
-                        letterSpacing = (-0.6).sp
-                    )
-                }
-
-                // Skip button
                 Text(
-                    text = "Skip",
+                    text = stringResource(R.string.skip),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White.copy(alpha = 0.8f),
@@ -124,26 +86,27 @@ fun LandingScreen(
                 )
             }
 
-            // Headline area
+            // ── Center: App icon + label ──────────────────────────────────────
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(Modifier.height(20.dp))
+                // App icon
+                AppIcon()
 
-                // Headline
+                Spacer(Modifier.height(24.dp))
+
+                // App name
                 Text(
-                    text = "AYAT QU",
+                    text = stringResource(R.string.landing_headline),
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
                     textAlign = TextAlign.Center,
-                    lineHeight = 39.6.sp,
-                    letterSpacing = (-0.9).sp,
-                    modifier = Modifier.fillMaxWidth()
+                    letterSpacing = (-0.2).sp,
                 )
             }
 
@@ -158,7 +121,6 @@ fun LandingScreen(
                     .padding(top = 32.dp, bottom = 40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Spacer(Modifier.height(12.dp))
 
                 // Log In
@@ -174,7 +136,7 @@ fun LandingScreen(
                     )
                 ) {
                     Text(
-                        text = "Log in",
+                        text = stringResource(R.string.log_in),
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -198,7 +160,7 @@ fun LandingScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
                 ) {
                     Text(
-                        text = "Sign up",
+                        text = stringResource(R.string.sign_up),
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -210,7 +172,7 @@ fun LandingScreen(
 
                 // Legal
                 Text(
-                    text = "By continuing, you agree to our\nPrivacy Policy and Terms of Use",
+                    text = stringResource(R.string.landing_legal),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextHint,
                     textAlign = TextAlign.Center

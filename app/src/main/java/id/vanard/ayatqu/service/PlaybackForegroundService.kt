@@ -36,7 +36,7 @@ class PlaybackForegroundService : Service() {
     }
 
     private fun buildNotification(title: String, text: String) = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_home)
+        .setSmallIcon(R.drawable.home_05_stroke_rounded)
         .setContentTitle(title)
         .setContentText(text)
         .setOngoing(true)

@@ -38,9 +38,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AccentCyan
 import id.vanard.ayatqu.core.ui.theme.AccentSky
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
@@ -51,29 +53,29 @@ import id.vanard.ayatqu.core.ui.theme.SurfaceNavy
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
-    val title: String,
-    val subtitle: String,
-    val ctaLabel: String,
+    val titleRes: Int,
+    val subtitleRes: Int,
+    val ctaLabelRes: Int,
     val activeDotColor: Color,
 )
 
 private val pages = listOf(
     OnboardingPage(
-        title = "Read Quran With\nPeace Daily",
-        subtitle = "Discover holy verses with translation audio\nbookmarks daily progress",
-        ctaLabel = "Get Started",
+        titleRes = R.string.onboarding_title_1,
+        subtitleRes = R.string.onboarding_subtitle_1,
+        ctaLabelRes = R.string.onboarding_get_started,
         activeDotColor = AccentCyan,
     ),
     OnboardingPage(
-        title = "Grow Faith With\nQuran Daily",
-        subtitle = "Strengthen faith through daily Quran reading\nlistening learning and reflection",
-        ctaLabel = "Next",
+        titleRes = R.string.onboarding_title_2,
+        subtitleRes = R.string.onboarding_subtitle_2,
+        ctaLabelRes = R.string.next,
         activeDotColor = AccentCyan,
     ),
     OnboardingPage(
-        title = "Light Your Heart\nWith Quran",
-        subtitle = "Fill your heart with peace through daily\nQuran reading and reflection",
-        ctaLabel = "Next",
+        titleRes = R.string.onboarding_title_3,
+        subtitleRes = R.string.onboarding_subtitle_3,
+        ctaLabelRes = R.string.next,
         activeDotColor = AccentSky,
     ),
 )
@@ -110,13 +112,13 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "AyatQu",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 color = Color.White
             )
             TextButton(onClick = onFinish) {
                 Text(
-                    text = "Skip",
+                    text = stringResource(R.string.skip),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )
@@ -190,7 +192,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
                 ) {
                     Text(
-                        text = currentPage.ctaLabel,
+                        text = stringResource(currentPage.ctaLabelRes),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.White
                     )
@@ -234,14 +236,14 @@ private fun PageContent(page: OnboardingPage) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = page.title,
+                text = stringResource(page.titleRes),
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = page.subtitle,
+                text = stringResource(page.subtitleRes),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center

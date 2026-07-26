@@ -3,6 +3,7 @@ package id.vanard.ayatqu.di
 import com.google.firebase.auth.FirebaseAuth
 import id.vanard.ayatqu.data.AdhanPreference
 import id.vanard.ayatqu.data.LastReadPreference
+import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.data.OnboardingPreference
 import id.vanard.ayatqu.data.PrayerTimeCache
 import id.vanard.ayatqu.data.local.AyahAudioCache
@@ -44,6 +45,7 @@ val appModule = module {
     single { AyahAudioCache(androidContext()) }
     single { PrayerTimeCache(androidContext()) }
     single { AdhanPreference(androidContext()) }
+    single { LanguagePreference(androidContext()) }
 
     // Firebase
     single { FirebaseAuth.getInstance() }

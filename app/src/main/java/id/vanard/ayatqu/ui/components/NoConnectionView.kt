@@ -23,6 +23,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.ui.icons.WifiSlash
 
@@ -64,7 +66,7 @@ fun NoConnectionView(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            text = "No Internet Connection",
+            text = stringResource(R.string.no_internet_title),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = ColorTextPrimary,
@@ -74,7 +76,7 @@ fun NoConnectionView(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Please check your network settings and try again.",
+            text = stringResource(R.string.no_internet_message),
             fontSize = 14.sp,
             color = ColorMuted,
             textAlign = TextAlign.Center,
@@ -90,7 +92,7 @@ fun NoConnectionView(
                 .padding(horizontal = 32.dp, vertical = 12.dp),
         ) {
             Text(
-                text = "Try Again",
+                text = stringResource(R.string.try_again),
                 color = Color.White,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
