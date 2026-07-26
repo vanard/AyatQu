@@ -13,6 +13,7 @@ import androidx.media3.session.MediaSession
 import id.vanard.ayatqu.data.local.AyahAudioCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.domain.model.Ayah
+import id.vanard.ayatqu.domain.model.LastRead
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.domain.repository.QuranRepository
 import id.vanard.ayatqu.service.PlaybackForegroundService
@@ -37,6 +38,9 @@ data class DetailSurahUiState(
     val downloadingAyahs: Set<Int> = emptySet(),
     val isDownloadingAll: Boolean = false,
     val downloadProgress: Pair<Int, Int>? = null,
+    val currentLastRead: LastRead? = null,
+    val showOverwriteDialog: Boolean = false,
+    val pendingAyahNumber: Int? = null,
 )
 
 class DetailSurahViewModel(
@@ -60,6 +64,12 @@ class DetailSurahViewModel(
     private var surahNumber: Int = 0
 
     init {
+        viewModelScope.launch {
+            repository.getLastRead().collect { lastRead ->
+                _uiState.update { it.copy(currentLastRead = lastRead) }
+            }
+        }
+
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
@@ -269,6 +279,40 @@ class DetailSurahViewModel(
                 }
                 _uiState.update { it.copy(isDownloadingAll = false, downloadProgress = null) }
             }
+        }
+    }
+
+    fun setLastRead(ayahNumber: Int) {
+        val state = _uiState.value
+        val existing = state.currentLastRead
+        if (existing != null && existing.surahNumber != surahNumber) {
+            _uiState.update { it.copy(showOverwriteDialog = true, pendingAyahNumber = ayahNumber) }
+        } else {
+            saveLastRead(ayahNumber)
+        }
+    }
+
+    fun confirmOverwrite() {
+        val pending = _uiState.value.pendingAyahNumber ?: return
+        _uiState.update { it.copy(showOverwriteDialog = false, pendingAyahNumber = null) }
+        saveLastRead(pending)
+    }
+
+    fun dismissOverwriteDialog() {
+        _uiState.update { it.copy(showOverwriteDialog = false, pendingAyahNumber = null) }
+    }
+
+    private fun saveLastRead(ayahNumber: Int) {
+        val surahName = _uiState.value.surah?.nameEnglish ?: "Surah $surahNumber"
+        viewModelScope.launch {
+            repository.saveLastRead(
+                LastRead(
+                    surahNumber = surahNumber,
+                    ayahNumber = ayahNumber,
+                    surahName = surahName,
+                    timestamp = System.currentTimeMillis(),
+                )
+            )
         }
     }
 

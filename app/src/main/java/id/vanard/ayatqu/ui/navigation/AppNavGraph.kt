@@ -1,5 +1,7 @@
 package id.vanard.ayatqu.ui.navigation
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -8,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,11 +18,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,18 +41,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
-import id.vanard.ayatqu.ui.icons.BookOpen
-import id.vanard.ayatqu.ui.icons.BookOpenFill
-import id.vanard.ayatqu.ui.icons.House
-import id.vanard.ayatqu.ui.icons.HouseFill
-import id.vanard.ayatqu.ui.icons.UserCircle
-import id.vanard.ayatqu.ui.icons.UserCircleFill
+import id.vanard.ayatqu.ui.screen.DetailSurahScreen
 import id.vanard.ayatqu.ui.screen.HomeScreen
 import id.vanard.ayatqu.ui.screen.LandingScreen
 import id.vanard.ayatqu.ui.screen.LoginScreen
 import id.vanard.ayatqu.ui.screen.OnboardingScreen
-import id.vanard.ayatqu.ui.screen.DetailSurahScreen
 import id.vanard.ayatqu.ui.screen.ProfileScreen
 import id.vanard.ayatqu.ui.screen.QuranScreen
 import id.vanard.ayatqu.ui.screen.SignUpScreen
@@ -63,7 +58,7 @@ private const val ROUTE_LANDING    = "landing"
 private const val ROUTE_LOGIN      = "login"
 private const val ROUTE_SIGNUP     = "signup"
 private const val ROUTE_MAIN       = "main"
-private const val ROUTE_SURAH      = "surah/{surahNumber}"
+private const val ROUTE_SURAH      = "surah/{surahNumber}?ayahNumber={ayahNumber}"
 
 // ── Bottom nav design tokens ──────────────────────────────────────────────────
 private val NavBarSurface       = Color(0xFFFFFFFF)
@@ -73,13 +68,13 @@ private val NavItemActiveBg     = Color(0x142D6B8C)  // ~8% Primary
 private val NavItemInactive     = Color(0xFF8E8E93)
 
 enum class BottomNavDestination(
-    val label: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
+    @param:StringRes val labelRes: Int,
+    @param:DrawableRes val selectedIconRes: Int,
+    @param:DrawableRes val unselectedIconRes: Int,
 ) {
-    HOME("Home", HouseFill, House),
-    QURAN("Quran", BookOpenFill, BookOpen),
-    PROFILE("Profile", UserCircleFill, UserCircle),
+    HOME(R.string.nav_home, R.drawable.home_05_stroke_rounded, R.drawable.home_05_stroke_rounded),
+    QURAN(R.string.nav_quran, R.drawable.quran_01_stroke_rounded, R.drawable.quran_01_stroke_rounded),
+    PROFILE(R.string.nav_profile, R.drawable.ic_user_circle, R.drawable.ic_user_circle),
 }
 
 @Composable
@@ -170,14 +165,19 @@ fun AppNavGraph(
                 onSurahClick = { surahNumber ->
                     navController.navigate("surah/$surahNumber")
                 },
+                onLastReadClick = { surahNumber, ayahNumber ->
+                    navController.navigate("surah/$surahNumber?ayahNumber=$ayahNumber")
+                },
             )
         }
 
         // ── Detail Surah ──────────────────────────────────────────────────────
         composable(ROUTE_SURAH) { backStackEntry ->
             val surahNumber = backStackEntry.arguments?.getString("surahNumber")?.toIntOrNull() ?: 1
+            val ayahNumber = backStackEntry.arguments?.getString("ayahNumber")?.toIntOrNull()
             DetailSurahScreen(
                 surahNumber = surahNumber,
+                ayahNumber = ayahNumber,
                 onBackClick = { navController.popBackStack() },
             )
         }
@@ -192,13 +192,14 @@ private fun MainScreen(
     onLoginClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
     onSurahClick: (Int) -> Unit = {},
+    onLastReadClick: (Int, Int) -> Unit = { _, _ -> },
 ) {
     var current by rememberSaveable { mutableStateOf(BottomNavDestination.HOME) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
             when (current) {
-                BottomNavDestination.HOME    -> HomeScreen()
+                BottomNavDestination.HOME    -> HomeScreen(onLastReadClick = onLastReadClick)
                 BottomNavDestination.QURAN   -> QuranScreen(onSurahClick = onSurahClick)
                 BottomNavDestination.PROFILE -> ProfileScreen(
                     onLogout = onLogout,
@@ -227,7 +228,11 @@ fun AyatQuBottomBar(
         tonalElevation = 0.dp,
         shadowElevation = 8.dp,
     ) {
-        Column {
+        Column(
+            modifier = Modifier.padding(
+                WindowInsets.navigationBars.asPaddingValues()
+            ),
+        ) {
             HorizontalDivider(
                 color = NavBarDivider,
                 thickness = 0.5.dp,
@@ -235,13 +240,8 @@ fun AyatQuBottomBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = 8.dp,
-                        vertical = 8.dp,
-                    )
-                    .padding(
-                        WindowInsets.navigationBars.asPaddingValues()
-                    ),
+                    .height(70.dp)
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -278,7 +278,7 @@ private fun NavBarItem(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -289,15 +289,15 @@ private fun NavBarItem(
                 .padding(horizontal = 12.dp, vertical = 6.dp),
         ) {
             Icon(
-                imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
-                contentDescription = destination.label,
+                painter = painterResource(id = if (selected) destination.selectedIconRes else destination.unselectedIconRes),
+                contentDescription = stringResource(destination.labelRes),
                 tint = iconColor,
                 modifier = Modifier.size(24.dp),
             )
         }
 
         Text(
-            text = destination.label,
+            text = stringResource(destination.labelRes),
             color = labelColor,
             fontSize = 11.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,

@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,8 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -32,17 +37,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,23 +59,28 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.compose.foundation.text.KeyboardOptions
+import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.Ayah
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.ui.icons.ArrowLeft
-import id.vanard.ayatqu.ui.icons.DotsThreeVertical
 import id.vanard.ayatqu.ui.icons.Download
 import id.vanard.ayatqu.ui.icons.Pause
 import id.vanard.ayatqu.ui.icons.Play
 import id.vanard.ayatqu.viewmodel.DetailSurahUiState
 import id.vanard.ayatqu.viewmodel.DetailSurahViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -84,12 +98,14 @@ private val ColorBadgeBg = Color(0xFFEFF6F9)
 @Composable
 fun DetailSurahScreen(
     surahNumber: Int,
+    ayahNumber: Int? = null,
     onBackClick: () -> Unit = {},
     viewModel: DetailSurahViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val listState = rememberLazyListState()
 
     // Request notification permission on Android 13+ when first opening
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -110,6 +126,16 @@ fun DetailSurahScreen(
         }
     }
 
+    // Scroll to target ayah after ayahs are loaded
+    LaunchedEffect(state.ayahs, ayahNumber) {
+        if (ayahNumber != null && state.ayahs.isNotEmpty()) {
+            val index = state.ayahs.indexOfFirst { it.ayahNumber == ayahNumber }
+            if (index >= 0) {
+                listState.animateScrollToItem(index)
+            }
+        }
+    }
+
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
@@ -125,6 +151,10 @@ fun DetailSurahScreen(
             onDownloadAyah = viewModel::downloadAyah,
             onDownloadAll = viewModel::downloadAll,
             onStopPlayback = viewModel::stopPlayback,
+            onSetLastRead = viewModel::setLastRead,
+            onConfirmOverwrite = viewModel::confirmOverwrite,
+            onDismissOverwriteDialog = viewModel::dismissOverwriteDialog,
+            listState = listState,
         )
 
         SnackbarHost(
@@ -145,9 +175,20 @@ internal fun DetailSurahContent(
     onDownloadAyah: (Int) -> Unit = {},
     onDownloadAll: () -> Unit = {},
     onStopPlayback: () -> Unit = {},
+    onSetLastRead: (Int) -> Unit = {},
+    onConfirmOverwrite: () -> Unit = {},
+    onDismissOverwriteDialog: () -> Unit = {},
+    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showJumpDialog by remember { mutableStateOf(false) }
+    var jumpAyahInput by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        state = topAppBarState,
+        canScroll = { state.ayahs.isNotEmpty() },
+    )
 
     Scaffold(
         modifier = Modifier
@@ -157,40 +198,62 @@ internal fun DetailSurahContent(
             LargeTopAppBar(
                 title = {
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp, top = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
+                            modifier = Modifier.fillMaxWidth(),
                             text = state.surah?.nameEnglish ?: "",
-                            fontSize = 22.sp,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold,
                             color = ColorTextPrimary,
+                            lineHeight = 18.sp,
+                            maxLines = 1,
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(0.5.dp))
                         Text(
                             text = state.surah?.nameArabic ?: "",
-                            fontSize = 24.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ColorGold,
+                            maxLines = 1,
                         )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = buildString {
-                                state.surah?.let { append("${it.versesCount} Ayahs") }
-                                state.surah?.let { append(" . ${it.revelationPlace.replaceFirstChar { c -> c.uppercase() }}") }
-                            },
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ColorPrimary,
-                            letterSpacing = 0.6.sp,
+                        val collapsedFraction by animateFloatAsState(
+                            targetValue = topAppBarState.collapsedFraction,
+                            animationSpec = tween(200),
+                            label = "collapsedFraction",
                         )
+                        if (collapsedFraction <= 0.2f) {
+                            Text(
+                                text = buildString {
+                                    state.surah?.let {
+                                        append(
+                                            stringResource(
+                                                R.string.ayahs_count,
+                                                it.versesCount
+                                            )
+                                        )
+                                    }
+                                    state.surah?.let { append(" . ${it.revelationPlace.replaceFirstChar { c -> c.uppercase() }}") }
+                                },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ColorPrimary,
+                                letterSpacing = 0.6.sp,
+                                lineHeight = 14.sp,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = ArrowLeft,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = ColorTextPrimary,
                             modifier = Modifier.size(24.dp),
                         )
@@ -200,8 +263,8 @@ internal fun DetailSurahContent(
                     Box {
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
-                                imageVector = DotsThreeVertical,
-                                contentDescription = "More",
+                                painter = painterResource(id = R.drawable.ellipsis_vertical_stroke_rounded),
+                                contentDescription = stringResource(R.string.more),
                                 tint = ColorTextPrimary,
                                 modifier = Modifier.size(24.dp),
                             )
@@ -213,7 +276,28 @@ internal fun DetailSurahContent(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = if (state.isDownloadingAll) "Downloading..." else "Download all",
+                                        text = stringResource(R.string.jump_to_ayah),
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    showJumpDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.arrow_circle_up_stroke_rounded),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = if (state.isDownloadingAll) stringResource(R.string.downloading) else stringResource(
+                                            R.string.download_all
+                                        ),
                                         fontWeight = FontWeight.Medium,
                                     )
                                 },
@@ -233,6 +317,11 @@ internal fun DetailSurahContent(
                         }
                     }
                 },
+//                windowInsets = if (topAppBarState.collapsedFraction > 0.5f)
+//                    TopAppBarDefaults.windowInsets
+//                else
+//                    WindowInsets(0, 64, 0, 0),
+                windowInsets = TopAppBarDefaults.windowInsets,
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = ColorSurface,
@@ -256,6 +345,7 @@ internal fun DetailSurahContent(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = padding,
             ) {
                 // Download progress
@@ -278,7 +368,11 @@ internal fun DetailSurahContent(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Downloading ${state.downloadProgress.first}/${state.downloadProgress.second}",
+                                text = stringResource(
+                                    R.string.downloading_progress,
+                                    state.downloadProgress.first,
+                                    state.downloadProgress.second
+                                ),
                                 fontSize = 11.sp,
                                 color = ColorMuted,
                             )
@@ -321,6 +415,7 @@ internal fun DetailSurahContent(
                         isDownloading = ayah.ayahNumber in state.downloadingAyahs,
                         onPlayClick = { onPlayAyah(ayah.ayahNumber) },
                         onDownloadClick = { onDownloadAyah(ayah.ayahNumber) },
+                        onSetLastRead = { onSetLastRead(ayah.ayahNumber) },
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 24.dp),
@@ -332,9 +427,85 @@ internal fun DetailSurahContent(
             }
         }
     }
-}
 
-// ── Ayah card ─────────────────────────────────────────────────────────────────
+    // Overwrite confirmation dialog
+    if (state.showOverwriteDialog && state.pendingAyahNumber != null) {
+        AlertDialog(
+            onDismissRequest = onDismissOverwriteDialog,
+            title = { Text(text = stringResource(R.string.overwrite_last_read)) },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.overwrite_last_read_message,
+                        state.currentLastRead?.surahName ?: "",
+                        state.surah?.nameEnglish ?: "",
+                        state.pendingAyahNumber,
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onConfirmOverwrite) {
+                    Text(text = stringResource(R.string.overwrite))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissOverwriteDialog) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    // Jump to ayah dialog
+    if (showJumpDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showJumpDialog = false
+                jumpAyahInput = ""
+            },
+            title = { Text(text = stringResource(R.string.jump_to_ayah)) },
+            text = {
+                OutlinedTextField(
+                    value = jumpAyahInput,
+                    onValueChange = { jumpAyahInput = it.filter { c -> c.isDigit() } },
+                    label = { Text(text = stringResource(R.string.ayah_number_hint)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val ayahNum = jumpAyahInput.toIntOrNull()
+                        if (ayahNum != null && ayahNum in 1..state.ayahs.size) {
+                            val index = state.ayahs.indexOfFirst { it.ayahNumber == ayahNum }
+                            if (index >= 0) {
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(index)
+                                }
+                            }
+                        }
+                        showJumpDialog = false
+                        jumpAyahInput = ""
+                    },
+                    enabled = jumpAyahInput.toIntOrNull() != null,
+                ) {
+                    Text(text = stringResource(R.string.jump))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showJumpDialog = false
+                        jumpAyahInput = ""
+                    },
+                ) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+}
 
 @Composable
 private fun AyahCard(
@@ -345,6 +516,7 @@ private fun AyahCard(
     isDownloading: Boolean,
     onPlayClick: () -> Unit,
     onDownloadClick: () -> Unit,
+    onSetLastRead: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -380,7 +552,7 @@ private fun AyahCard(
             // Arabic text
             Text(
                 text = ayah.arabic,
-                fontSize = 24.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Normal,
                 color = ColorTextPrimary,
                 textAlign = TextAlign.End,
@@ -417,12 +589,32 @@ private fun AyahCard(
 
         Spacer(Modifier.height(10.dp))
 
-        // Single action button: download / loading / play / pause
+        // Action buttons: last read + download/play
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Last read button
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(ColorPrimary.copy(alpha = 0.08f))
+                    .clickable { onSetLastRead() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.bookmark_stroke_rounded),
+                    contentDescription = stringResource(R.string.set_last_read),
+                    tint = ColorPrimary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            // Play/Download button
             val buttonColor = when {
                 isPlaying -> ColorGold
                 isDownloaded -> ColorPrimary
@@ -433,7 +625,7 @@ private fun AyahCard(
                 isDownloaded -> Color.White
                 else -> ColorPrimary
             }
-            val clickable = isDownloaded || (!isDownloaded && !isDownloading)
+            val clickable = isDownloaded || (!isDownloading)
 
             Box(
                 modifier = Modifier
@@ -450,31 +642,34 @@ private fun AyahCard(
                 when {
                     isDownloading || isPreparingAudio -> {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(16.dp),
                             color = if (isPreparingAudio) Color.White else ColorPrimary,
                             strokeWidth = 2.dp,
                         )
                     }
+
                     isPlaying -> {
                         Icon(
                             imageVector = Pause,
-                            contentDescription = "Pause",
+                            contentDescription = stringResource(R.string.pause),
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(16.dp),
                         )
                     }
+
                     isDownloaded -> {
                         Icon(
                             imageVector = Play,
-                            contentDescription = "Play",
+                            contentDescription = stringResource(R.string.play),
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(16.dp),
                         )
                     }
+
                     else -> {
                         Icon(
                             imageVector = Download,
-                            contentDescription = "Download",
+                            contentDescription = stringResource(R.string.download),
                             tint = ColorPrimary,
                             modifier = Modifier.size(16.dp),
                         )

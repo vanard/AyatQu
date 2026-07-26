@@ -1,0 +1,125 @@
+<resources>
+    <string name="app_name">AyatQu</string>
+
+    <!-- Landing -->
+    <string name="skip">Lewati</string>
+    <string name="landing_headline">AYAT QU</string>
+    <string name="log_in">Masuk</string>
+    <string name="sign_up">Daftar</string>
+    <string name="landing_legal">Dengan melanjutkan, Anda menyetujui\nKebijakan Privasi dan Ketentuan Penggunaan kami</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Baca Al-Quran Dengan\nKetenangan Setiap Hari</string>
+    <string name="onboarding_subtitle_1">Temukan ayat-ayat suci dengan terjemahan audio\nbookmark dan kemajuan harian</string>
+    <string name="onboarding_get_started">Mulai</string>
+    <string name="onboarding_title_2">Perkuat Iman Dengan\nAl-Quran Setiap Hari</string>
+    <string name="onboarding_subtitle_2">Perkuat iman melalui bacaan Al-Quran harian\nmendengarkan, belajar, dan merenung</string>
+    <string name="onboarding_title_3">Cahayakan Hati Anda\nDengan Al-Quran</string>
+    <string name="onboarding_subtitle_3">Isi hati Anda dengan kedamaian melalui\nbacaan dan renungan Al-Quran harian</string>
+    <string name="next">Berikutnya</string>
+
+    <!-- Home -->
+    <string name="welcome_user">Selamat datang, %1$s</string>
+    <string name="guest">Tamu</string>
+    <string name="assalamualaikum">Assalamualaikum</string>
+    <string name="last_read">Terakhir Dibaca</string>
+    <string name="ayah_no">AYAT NO: %1$d</string>
+    <string name="prayer_times">Waktu Sholat</string>
+    <string name="your_location">Lokasi Anda</string>
+    <string name="unknown_location">Tidak Diketahui</string>
+    <string name="no_internet_connection">Tidak ada koneksi internet</string>
+    <string name="retry">Coba Lagi</string>
+
+    <!-- Quran -->
+    <string name="al_quran">AL-QURAN</string>
+    <string name="tab_surah">Surah</string>
+    <string name="tab_juz">Juz</string>
+    <string name="search_surah_hint">Cari surah berdasarkan nama atau nomor</string>
+    <string name="search_juz_hint">Cari juz berdasarkan nama surah</string>
+    <string name="clear">Hapus</string>
+    <string name="surah_info">%1$d AYAT \u2022 %2$s</string>
+    <string name="juz_number">Juz %1$d</string>
+    <string name="couldnt_load_surahs">Tidak dapat memuat surah</string>
+    <string name="try_again">Coba Lagi</string>
+    <string name="no_matches_for">Tidak ada hasil untuk \"%1$s\"</string>
+    <string name="try_different_search">Coba kata kunci pencarian yang berbeda</string>
+
+    <!-- Detail Surah -->
+    <string name="ayahs_count">%1$d Ayat</string>
+    <string name="back">Kembali</string>
+    <string name="more">Lainnya</string>
+    <string name="downloading">Mengunduh\u2026</string>
+    <string name="download_all">Unduh semua</string>
+    <string name="downloading_progress">Mengunduh %1$d/%2$d</string>
+    <string name="pause">Jeda</string>
+    <string name="play">Putar</string>
+    <string name="download">Unduh</string>
+    <string name="set_last_read">Atur Terakhir Dibaca</string>
+    <string name="overwrite_last_read">Timpa Terakhir Dibaca?</string>
+    <string name="overwrite_last_read_message">Anda memiliki terakhir dibaca di %1$s. Timpa dengan %2$s Ayat %3$d?</string>
+    <string name="overwrite">Timpa</string>
+    <string name="last_read_set">Terakhir dibaca berhasil diatur</string>
+    <string name="jump_to_ayah">Lompat ke Ayat</string>
+    <string name="ayah_number_hint">Nomor ayat</string>
+    <string name="jump">Lompat</string>
+
+    <!-- Login -->
+    <string name="welcome_back">Selamat datang kembali</string>
+    <string name="email_address">Alamat email</string>
+    <string name="email_placeholder">anda@email.com</string>
+    <string name="password">Kata sandi</string>
+    <string name="password_placeholder">\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</string>
+    <string name="show">Tampilkan</string>
+    <string name="hide">Sembunyikan</string>
+    <string name="forgot_password">Lupa kata sandi?</string>
+    <string name="continue_with_google">Lanjutkan dengan Google</string>
+    <string name="no_account_prompt">Belum punya akun?</string>
+
+    <!-- Sign Up -->
+    <string name="signup">Daftar</string>
+    <string name="create_your_account">Buat akun Anda</string>
+    <string name="continue_button">Lanjutkan</string>
+    <string name="continue_with_apple">Lanjutkan dengan Apple</string>
+    <string name="has_account_prompt">Sudah punya akun?</string>
+
+    <!-- Profile -->
+    <string name="settings">Pengaturan</string>
+    <string name="notifications">Notifikasi</string>
+    <string name="daily_prayer_reminders">Pengingat sholat harian</string>
+    <string name="theme">Tema</string>
+    <string name="dark_mode">Mode gelap</string>
+    <string name="light_mode">Mode terang</string>
+    <string name="language">Bahasa</string>
+    <string name="english">Inggris</string>
+    <string name="other">Lainnya</string>
+    <string name="rate_app">Beri Rating</string>
+    <string name="enjoying_leave_review">Menikmati? Berikan ulasan</string>
+    <string name="about">Tentang</string>
+    <string name="version_label">Versi 1.0.0</string>
+    <string name="clear_cache">Hapus Cache</string>
+    <string name="free_up_storage">Bebaskan ruang penyimpanan</string>
+    <string name="logout">Keluar</string>
+    <string name="logout_title">Keluar?</string>
+    <string name="logout_message">Apakah Anda yakin ingin keluar? Anda perlu masuk kembali untuk mengakses akun Anda.</string>
+    <string name="cancel">Batal</string>
+    <string name="clear_cache_title">Hapus Cache?</string>
+    <string name="clear_cache_message">Ini akan menghapus waktu sholat yang di-cache dan data surah. Aplikasi akan mengunduh ulang data saat diperlukan.</string>
+    <string name="welcome_guest">Selamat datang, Tamu</string>
+    <string name="sign_in_sync">Masuk untuk menyinkronkan kemajuan Anda di berbagai perangkat</string>
+    <string name="sign_in">Masuk</string>
+    <string name="create_account">Buat Akun</string>
+    <string name="adhan_sound">Suara Adzan</string>
+    <string name="cache_cleared">Cache berhasil dihapus</string>
+
+    <!-- Auth -->
+    <string name="or_divider">  atau  </string>
+
+    <!-- No Connection -->
+    <string name="no_internet_title">Tidak Ada Koneksi Internet</string>
+    <string name="no_internet_message">Silakan periksa pengaturan jaringan Anda dan coba lagi.</string>
+
+    <!-- Bottom Nav -->
+    <string name="nav_home">Beranda</string>
+    <string name="nav_quran">Al-Quran</string>
+    <string name="nav_profile">Profil</string>
+</resources>
