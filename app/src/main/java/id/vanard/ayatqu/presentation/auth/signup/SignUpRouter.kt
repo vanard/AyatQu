@@ -1,0 +1,56 @@
+package id.vanard.ayatqu.presentation.auth.signup
+
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import id.vanard.ayatqu.core.navigation.NavigationManager
+import id.vanard.ayatqu.navigation.directions.AuthDirection
+import id.vanard.ayatqu.presentation.auth.component.requestGoogleIdToken
+import id.vanard.ayatqu.presentation.auth.signup.contract.SignUpEvent
+import id.vanard.ayatqu.presentation.auth.signup.contract.SignUpSideEffect
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+
+@Composable
+fun SignUpRouter(
+    modifier: Modifier = Modifier,
+    viewModel: SignUpViewModel = koinViewModel(),
+    navigationManager: NavigationManager = koinInject(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                SignUpSideEffect.NavigateBack -> navigationManager.navigate(AuthDirection.back)
+                SignUpSideEffect.NavigateToLogin -> navigationManager.navigate(AuthDirection.login)
+                SignUpSideEffect.NavigateToHome -> navigationManager.navigate(AuthDirection.home)
+                SignUpSideEffect.RequestGoogleSignIn -> {
+                    requestGoogleIdToken(context).fold(
+                        onSuccess = { viewModel.onEvent(SignUpEvent.GoogleTokenReceived(it)) },
+                        onFailure = {
+                            viewModel.onEvent(
+                                SignUpEvent.GoogleSignInFailed(it.message ?: "Google sign-in failed")
+                            )
+                        },
+                    )
+                }
+                is SignUpSideEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    SignUpScreen(
+        state = state,
+        onEvent = viewModel::onEvent,
+        modifier = modifier,
+        snackbarHostState = snackbarHostState,
+    )
+}

@@ -25,4 +25,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "AyatQu"
 include(":app")
+include(":core:navigation")
 include(":core:ui")

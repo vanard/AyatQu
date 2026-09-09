@@ -20,13 +20,19 @@ import id.vanard.ayatqu.domain.repository.AuthRepository
 import id.vanard.ayatqu.domain.repository.PrayerTimeRepository
 import id.vanard.ayatqu.domain.repository.QuranRepository
 import id.vanard.ayatqu.domain.usecase.AuthUseCase
+import id.vanard.ayatqu.core.navigation.NavigationManager
+import id.vanard.ayatqu.core.navigation.NavigationManagerImpl
+import id.vanard.ayatqu.presentation.auth.landing.LandingViewModel
+import id.vanard.ayatqu.presentation.auth.login.LoginViewModel
+import id.vanard.ayatqu.presentation.auth.signup.SignUpViewModel
+import id.vanard.ayatqu.presentation.home.HomeViewModel
+import id.vanard.ayatqu.presentation.onboarding.OnboardingViewModel
+import id.vanard.ayatqu.presentation.profile.ProfileViewModel
+import id.vanard.ayatqu.presentation.quran.detail.DetailSurahViewModel
+import id.vanard.ayatqu.presentation.quran.list.QuranViewModel
+import id.vanard.ayatqu.presentation.root.AppViewModel
 import id.vanard.ayatqu.util.LocationHelper
 import id.vanard.ayatqu.util.NetworkUtils
-import id.vanard.ayatqu.viewmodel.AppViewModel
-import id.vanard.ayatqu.viewmodel.AuthViewModel
-import id.vanard.ayatqu.viewmodel.DetailSurahViewModel
-import id.vanard.ayatqu.viewmodel.HomeViewModel
-import id.vanard.ayatqu.viewmodel.QuranViewModel
 import id.vanard.ayatqu.worker.AdhanSchedulerWorker
 import id.vanard.ayatqu.worker.QuranDownloadWorker
 import org.koin.android.ext.koin.androidContext
@@ -63,13 +69,18 @@ val appModule = module {
 
     // Use cases
     singleOf(::AuthUseCase)
+    singleOf(::NavigationManagerImpl) bind NavigationManager::class
 
     // ViewModels
     viewModelOf(::AppViewModel)
-    viewModelOf(::AuthViewModel)
+    viewModelOf(::OnboardingViewModel)
+    viewModelOf(::LandingViewModel)
+    viewModelOf(::LoginViewModel)
+    viewModelOf(::SignUpViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::QuranViewModel)
     viewModelOf(::DetailSurahViewModel)
+    viewModelOf(::ProfileViewModel)
 
     // Workers
     workerOf(::QuranDownloadWorker)
