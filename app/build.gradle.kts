@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("ayatqu.android.application")
     id("ayatqu.android.compose")
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
 }
 
@@ -36,10 +37,10 @@ android {
 
 dependencies {
     implementation(project(":core:ui"))
+    implementation(project(":core:navigation"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
 
     // Icons: local PhosphorIcons.kt (https://phosphoricons.com) — no 3rd-party icon lib
 
@@ -54,7 +55,10 @@ dependencies {
     implementation(libs.koin.androidx.workmanager)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.kotlinx.serialization.core)
     implementation(libs.androidx.datastore.preferences)
     implementation("androidx.appcompat:appcompat:1.7.0")
 

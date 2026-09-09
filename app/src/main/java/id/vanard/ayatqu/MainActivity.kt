@@ -1,23 +1,20 @@
 package id.vanard.ayatqu
 
-import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
-import id.vanard.ayatqu.ui.navigation.AppNavGraph
-import id.vanard.ayatqu.util.PermissionHelper
-import id.vanard.ayatqu.viewmodel.AppViewModel
-import id.vanard.ayatqu.viewmodel.StartDestination
+import id.vanard.ayatqu.navigation.routes.AuthRoute
+import id.vanard.ayatqu.navigation.routes.MainRoute
+import id.vanard.ayatqu.presentation.root.AppViewModel
+import id.vanard.ayatqu.presentation.root.StartDestination
+import id.vanard.ayatqu.presentation.root.navigation.NavigationRoot
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
@@ -52,27 +49,12 @@ class MainActivity : AppCompatActivity() {
             AyatQuTheme {
                 val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
 
-                // Request notification permission on Android 13+
-                val notificationPermissionLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestPermission()
-                ) { isGranted: Boolean ->
-                    // Permission result handled - Chucker will work if granted
+                when (startDestination) {
+                    StartDestination.Loading -> Unit
+                    StartDestination.Onboarding -> NavigationRoot(AuthRoute.Onboarding)
+                    StartDestination.Landing -> NavigationRoot(AuthRoute.Landing)
+                    StartDestination.Home -> NavigationRoot(MainRoute.Home)
                 }
-
-                LaunchedEffect(Unit) {
-                    if (PermissionHelper.isNotificationPermissionRequired(this@MainActivity) &&
-                        !PermissionHelper.isNotificationPermissionGranted(this@MainActivity)
-                    ) {
-                        notificationPermissionLauncher.launch(
-                            PermissionHelper.getNotificationPermission()
-                        )
-                    }
-                }
-
-                AppNavGraph(
-                    startDestination = startDestination,
-                    onOnboardingFinished = viewModel::completeOnboarding
-                )
             }
         }
     }
