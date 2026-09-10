@@ -22,7 +22,6 @@ import id.vanard.ayatqu.service.PlaybackForegroundService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.IOException
 import java.net.URL
 
 class DetailSurahViewModel(
@@ -202,8 +201,7 @@ class DetailSurahViewModel(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
-                    val audioUrl = repository.getAyahAudioUrl(surahNumber, ayahNumber)
-                        ?: throw IOException("Could not get audio URL")
+                    val audioUrl = repository.getAyahAudioUrl(surahNumber, ayahNumber).getOrThrow()
 
                     val file = audioCache.getAyahFile(surahNumber, ayahNumber)
                     URL(audioUrl).openStream().use { input ->
@@ -254,8 +252,9 @@ class DetailSurahViewModel(
             withContext(Dispatchers.IO) {
                 ayahsToDownload.forEachIndexed { index, ayah ->
                     try {
-                        val audioUrl = repository.getAyahAudioUrl(surahNumber, ayah.ayahNumber)
-                            ?: return@forEachIndexed
+                        val audioUrl = repository
+                            .getAyahAudioUrl(surahNumber, ayah.ayahNumber)
+                            .getOrThrow()
 
                         val file = audioCache.getAyahFile(surahNumber, ayah.ayahNumber)
                         URL(audioUrl).openStream().use { input ->

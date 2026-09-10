@@ -9,7 +9,7 @@ interface QuranRepository {
     suspend fun getSurahs(): Result<List<Surah>>
     suspend fun getSurahWithAyahs(surahNumber: Int): Result<Pair<Surah, List<Ayah>>>
     suspend fun getAyah(surahNumber: Int, ayahNumber: Int): Result<Ayah>
-    suspend fun getAyahAudioUrl(surahNumber: Int, ayahNumber: Int): String?
+    suspend fun getAyahAudioUrl(surahNumber: Int, ayahNumber: Int): Result<String>
 
     // Last read
     fun getLastRead(): Flow<LastRead?>
