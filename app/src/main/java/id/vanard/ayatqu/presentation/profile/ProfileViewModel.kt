@@ -105,7 +105,7 @@ class ProfileViewModel(
 
     private fun selectLanguage(code: String) {
         setState { copy(showLanguageDialog = false, currentLanguage = code) }
-        viewModelScope.launch { languagePreference.setLanguage(code) }
+        languagePreference.setLanguage(code)
     }
 
     private fun logout() {

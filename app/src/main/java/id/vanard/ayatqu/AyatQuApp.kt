@@ -1,7 +1,6 @@
 package id.vanard.ayatqu
 
 import android.app.Application
-import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.di.appModule
 import id.vanard.ayatqu.util.NotificationHelper
 import id.vanard.ayatqu.worker.AdhanSchedulerWorker
@@ -17,10 +16,6 @@ class AyatQuApp : Application() {
             workManagerFactory()
             modules(appModule)
         }
-
-        // Apply saved language locale
-        LanguagePreference(this).applySavedLocale()
-
         NotificationHelper.createNotificationChannels(this)
         AdhanSchedulerWorker.enqueue(this)
     }

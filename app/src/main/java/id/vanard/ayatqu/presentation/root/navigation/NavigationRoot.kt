@@ -56,12 +56,6 @@ private val topLevelRoutes = linkedSetOf<NavKey>(
     MainRoute.Profile,
 )
 
-private val NavBarSurface = Color(0xFFFFFFFF)
-private val NavBarDivider = Color(0xFFF0F2F5)
-private val NavItemActive = Color(0xFF2D6B8C)
-private val NavItemActiveBg = Color(0x142D6B8C)
-private val NavItemInactive = Color(0xFF8E8E93)
-
 enum class BottomNavDestination(
     val route: NavKey,
     @param:StringRes val labelRes: Int,
@@ -134,14 +128,14 @@ fun AyatQuBottomBar(
     onSelect: (BottomNavDestination) -> Unit,
 ) {
     Surface(
-        color = NavBarSurface,
+        color = AyatQuTheme.colors.surface,
         tonalElevation = 0.dp,
         shadowElevation = 8.dp,
     ) {
         Column(
             modifier = Modifier.padding(WindowInsets.navigationBars.asPaddingValues()),
         ) {
-            HorizontalDivider(color = NavBarDivider, thickness = 0.5.dp)
+            HorizontalDivider(color = AyatQuTheme.colors.divider, thickness = 0.5.dp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,12 +163,12 @@ private fun NavBarItem(
     onClick: () -> Unit,
 ) {
     val iconColor by animateColorAsState(
-        targetValue = if (selected) NavItemActive else NavItemInactive,
+        targetValue = if (selected) AyatQuTheme.colors.primary else AyatQuTheme.colors.textMuted,
         animationSpec = tween(durationMillis = 200),
         label = "iconColor",
     )
     val labelColor by animateColorAsState(
-        targetValue = if (selected) NavItemActive else NavItemInactive,
+        targetValue = if (selected) AyatQuTheme.colors.primary else AyatQuTheme.colors.textMuted,
         animationSpec = tween(durationMillis = 200),
         label = "labelColor",
     )
@@ -190,7 +184,7 @@ private fun NavBarItem(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .background(if (selected) NavItemActiveBg else Color.Transparent)
+                .background(if (selected) AyatQuTheme.colors.selectedSurface else Color.Transparent)
                 .padding(horizontal = 12.dp, vertical = 6.dp),
         ) {
             Icon(

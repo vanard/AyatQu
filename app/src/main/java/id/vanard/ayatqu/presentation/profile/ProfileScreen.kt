@@ -61,14 +61,6 @@ import id.vanard.ayatqu.presentation.profile.contract.OnProfileEvent
 import id.vanard.ayatqu.presentation.profile.contract.ProfileEvent
 import id.vanard.ayatqu.presentation.profile.contract.ProfileState
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-private val ProfileAvatarBg      = Color(0xFF2D6B8C)
-private val ProfileAvatarText    = Color(0xFFFFFFFF)
-private val SectionLabelColor    = Color(0xFF8E8E93)
-private val DividerColor         = Color(0xFFF0F0F0)
-private val MenuIconTint         = Color(0xFF2D6B8C)
-private val LogoutRed            = Color(0xFFE53E3E)
-
 // ── Main composable ───────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -162,7 +154,7 @@ fun ProfileScreen(
             MenuActionItem(
                 icon = SignOut,
                 title = stringResource(R.string.logout),
-                tint = LogoutRed,
+                tint = AyatQuTheme.colors.error,
                 onClick = { onEvent(ProfileEvent.LogoutClicked) },
             )
         }
@@ -210,14 +202,14 @@ private fun LogoutConfirmationDialog(
             Text(
                 text = stringResource(R.string.logout_message),
                 style = MaterialTheme.typography.bodyLarge,
-                color = SectionLabelColor,
+                color = AyatQuTheme.colors.textMuted,
             )
         },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = LogoutRed,
+                    contentColor = AyatQuTheme.colors.error,
                 ),
             ) {
                 Text(
@@ -258,14 +250,14 @@ private fun ClearCacheConfirmationDialog(
             Text(
                 text = stringResource(R.string.clear_cache_message),
                 style = MaterialTheme.typography.bodyLarge,
-                color = SectionLabelColor,
+                color = AyatQuTheme.colors.textMuted,
             )
         },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = ProfileAvatarBg,
+                    contentColor = AyatQuTheme.colors.primary,
                 ),
             ) {
                 Text(
@@ -324,7 +316,7 @@ private fun LanguageSelectionDialog(
                                 .clip(CircleShape)
                                 .border(
                                     2.dp,
-                                    if (currentLanguage == code) MenuIconTint else SectionLabelColor,
+                                    if (currentLanguage == code) AyatQuTheme.colors.primary else AyatQuTheme.colors.textMuted,
                                     CircleShape,
                                 ),
                             contentAlignment = Alignment.Center,
@@ -334,7 +326,7 @@ private fun LanguageSelectionDialog(
                                     modifier = Modifier
                                         .size(10.dp)
                                         .clip(CircleShape)
-                                        .background(MenuIconTint),
+                                        .background(AyatQuTheme.colors.primary),
                                 )
                             }
                         }
@@ -379,12 +371,12 @@ private fun ProfileHeader(displayName: String, email: String) {
             modifier = Modifier
                 .size(96.dp)
                 .clip(CircleShape)
-                .background(ProfileAvatarBg),
+                .background(AyatQuTheme.colors.primary),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = initial,
-                color = ProfileAvatarText,
+                color = AyatQuTheme.colors.onPrimary,
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -406,7 +398,7 @@ private fun ProfileHeader(displayName: String, email: String) {
         Text(
             text = email,
             style = MaterialTheme.typography.bodyLarge,
-            color = SectionLabelColor,
+            color = AyatQuTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
     }
@@ -430,13 +422,13 @@ private fun GuestHeader(
             modifier = Modifier
                 .size(96.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE0E0E0)),
+                .background(AyatQuTheme.colors.disabled),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = id.vanard.ayatqu.core.ui.icon.UserCircle,
                 contentDescription = null,
-                tint = SectionLabelColor,
+                tint = AyatQuTheme.colors.textMuted,
                 modifier = Modifier.size(56.dp),
             )
         }
@@ -455,7 +447,7 @@ private fun GuestHeader(
         Text(
             text = stringResource(R.string.sign_in_sync),
             style = MaterialTheme.typography.bodyMedium,
-            color = SectionLabelColor,
+            color = AyatQuTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
 
@@ -469,8 +461,8 @@ private fun GuestHeader(
                 .height(48.dp),
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = ProfileAvatarBg,
-                contentColor = Color.White,
+                containerColor = AyatQuTheme.colors.primary,
+                contentColor = AyatQuTheme.colors.onPrimary,
             ),
         ) {
             Text(
@@ -490,9 +482,9 @@ private fun GuestHeader(
                 .height(48.dp),
             shape = CircleShape,
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = ProfileAvatarBg,
+                contentColor = AyatQuTheme.colors.primary,
             ),
-            border = androidx.compose.foundation.BorderStroke(1.5.dp, ProfileAvatarBg),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, AyatQuTheme.colors.primary),
         ) {
             Text(
                 text = stringResource(R.string.create_account),
@@ -510,7 +502,7 @@ private fun SectionLabel(label: String) {
     Text(
         text = label.uppercase(),
         style = MaterialTheme.typography.labelMedium,
-        color = SectionLabelColor,
+        color = AyatQuTheme.colors.textMuted,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 1.sp,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -538,7 +530,7 @@ private fun MenuToggleItem(
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = if (enabled) MenuIconTint else MenuIconTint.copy(alpha = 0.4f),
+            tint = if (enabled) AyatQuTheme.colors.primary else AyatQuTheme.colors.primary.copy(alpha = 0.4f),
             modifier = Modifier.size(24.dp),
         )
         Spacer(Modifier.width(16.dp))
@@ -552,7 +544,7 @@ private fun MenuToggleItem(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (enabled) SectionLabelColor else SectionLabelColor.copy(alpha = 0.4f),
+                color = if (enabled) AyatQuTheme.colors.textMuted else AyatQuTheme.colors.textMuted.copy(alpha = 0.4f),
             )
         }
         Switch(
@@ -560,14 +552,14 @@ private fun MenuToggleItem(
             onCheckedChange = onCheckedChange,
             enabled = enabled,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = MenuIconTint,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0xFFD1D5DB),
-                disabledCheckedThumbColor = Color.White.copy(alpha = 0.4f),
-                disabledCheckedTrackColor = MenuIconTint.copy(alpha = 0.4f),
-                disabledUncheckedThumbColor = Color.White.copy(alpha = 0.4f),
-                disabledUncheckedTrackColor = Color(0xFFD1D5DB).copy(alpha = 0.4f),
+                checkedThumbColor = AyatQuTheme.colors.onPrimary,
+                checkedTrackColor = AyatQuTheme.colors.primary,
+                uncheckedThumbColor = AyatQuTheme.colors.surface,
+                uncheckedTrackColor = AyatQuTheme.colors.disabled,
+                disabledCheckedThumbColor = AyatQuTheme.colors.onPrimary.copy(alpha = 0.4f),
+                disabledCheckedTrackColor = AyatQuTheme.colors.primary.copy(alpha = 0.4f),
+                disabledUncheckedThumbColor = AyatQuTheme.colors.surface.copy(alpha = 0.4f),
+                disabledUncheckedTrackColor = AyatQuTheme.colors.disabled.copy(alpha = 0.4f),
             ),
         )
     }
@@ -590,7 +582,7 @@ private fun MenuNavigationItem(
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = MenuIconTint,
+            tint = AyatQuTheme.colors.primary,
             modifier = Modifier.size(24.dp),
         )
         Spacer(Modifier.width(16.dp))
@@ -603,13 +595,13 @@ private fun MenuNavigationItem(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = SectionLabelColor,
+                color = AyatQuTheme.colors.textMuted,
             )
         }
         Icon(
             imageVector = CaretRight,
             contentDescription = null,
-            tint = SectionLabelColor,
+            tint = AyatQuTheme.colors.textMuted,
             modifier = Modifier.size(20.dp),
         )
     }
@@ -648,7 +640,7 @@ private fun MenuActionItem(
 private fun MenuDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(horizontal = 20.dp),
-        color = DividerColor,
+        color = AyatQuTheme.colors.divider,
         thickness = 0.5.dp,
     )
 }
@@ -687,7 +679,7 @@ private fun SoundTypeSelector(
             Icon(
                 imageVector = Bell,
                 contentDescription = "Adhan Sound",
-                tint = MenuIconTint,
+                tint = AyatQuTheme.colors.primary,
                 modifier = Modifier.size(24.dp),
             )
             Spacer(Modifier.width(16.dp))
@@ -700,13 +692,13 @@ private fun SoundTypeSelector(
                 Text(
                     text = currentLabel,
                     style = MaterialTheme.typography.bodySmall,
-                    color = SectionLabelColor,
+                    color = AyatQuTheme.colors.textMuted,
                 )
             }
             Icon(
                 imageVector = CaretRight,
                 contentDescription = null,
-                tint = SectionLabelColor,
+                tint = AyatQuTheme.colors.textMuted,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -720,7 +712,7 @@ private fun SoundTypeSelector(
                     text = {
                         Text(
                             text = label,
-                            color = if (type == soundType) MenuIconTint
+                            color = if (type == soundType) AyatQuTheme.colors.primary
                                     else MaterialTheme.colorScheme.onBackground,
                         )
                     },

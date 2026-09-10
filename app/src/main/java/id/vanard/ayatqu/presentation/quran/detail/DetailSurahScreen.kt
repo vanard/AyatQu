@@ -47,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -62,6 +61,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.Ayah
+import id.vanard.ayatqu.domain.model.LastRead
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.core.ui.icon.ArrowLeft
 import id.vanard.ayatqu.core.ui.icon.Download
@@ -71,16 +71,6 @@ import id.vanard.ayatqu.presentation.quran.detail.contract.DetailSurahEvent
 import id.vanard.ayatqu.presentation.quran.detail.contract.DetailSurahState
 import id.vanard.ayatqu.presentation.quran.detail.contract.OnDetailSurahEvent
 import kotlinx.coroutines.launch
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-private val ColorPrimary = Color(0xFF2D6B8C)
-private val ColorTextPrimary = Color(0xFF2D2D2D)
-private val ColorGold = Color(0xFFC19A6B)
-private val ColorMuted = Color(0xFF8E8E93)
-private val ColorSurface = Color(0xFFFFFFFF)
-private val ColorBgSubtle = Color(0xFFF7F9FB)
-private val ColorBorder = Color(0xFFF0F2F5)
-private val ColorBadgeBg = Color(0xFFEFF6F9)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,7 +109,7 @@ fun DetailSurahScreen(
                             fontSize = 18.sp,
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold,
-                            color = ColorTextPrimary,
+                            color = AyatQuTheme.colors.textPrimary,
                             lineHeight = 18.sp,
                             maxLines = 1,
                         )
@@ -128,7 +118,7 @@ fun DetailSurahScreen(
                             text = state.surah?.nameArabic ?: "",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = ColorGold,
+                            color = AyatQuTheme.colors.accentGold,
                             maxLines = 1,
                         )
                         val collapsedFraction by animateFloatAsState(
@@ -151,7 +141,7 @@ fun DetailSurahScreen(
                                 },
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = ColorPrimary,
+                                color = AyatQuTheme.colors.primary,
                                 letterSpacing = 0.6.sp,
                                 lineHeight = 14.sp,
                                 maxLines = 1,
@@ -164,7 +154,7 @@ fun DetailSurahScreen(
                         Icon(
                             imageVector = ArrowLeft,
                             contentDescription = stringResource(R.string.back),
-                            tint = ColorTextPrimary,
+                            tint = AyatQuTheme.colors.textPrimary,
                             modifier = Modifier.size(24.dp),
                         )
                     }
@@ -175,7 +165,7 @@ fun DetailSurahScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.ellipsis_vertical_stroke_rounded),
                                 contentDescription = stringResource(R.string.more),
-                                tint = ColorTextPrimary,
+                                tint = AyatQuTheme.colors.textPrimary,
                                 modifier = Modifier.size(24.dp),
                             )
                         }
@@ -236,8 +226,8 @@ fun DetailSurahScreen(
                 windowInsets = TopAppBarDefaults.windowInsets,
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ColorSurface,
-                    scrolledContainerColor = ColorSurface,
+                    containerColor = AyatQuTheme.colors.surface,
+                    scrolledContainerColor = AyatQuTheme.colors.surface,
                 ),
             )
         },
@@ -250,7 +240,7 @@ fun DetailSurahScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    color = ColorPrimary,
+                    color = AyatQuTheme.colors.primary,
                     modifier = Modifier.size(40.dp),
                 )
             }
@@ -266,7 +256,7 @@ fun DetailSurahScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(ColorSurface)
+                                .background(AyatQuTheme.colors.surface)
                                 .padding(horizontal = 24.dp, vertical = 8.dp),
                         ) {
                             LinearProgressIndicator(
@@ -275,8 +265,8 @@ fun DetailSurahScreen(
                                     .fillMaxWidth()
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
-                                color = ColorGold,
-                                trackColor = ColorBorder,
+                                color = AyatQuTheme.colors.accentGold,
+                                trackColor = AyatQuTheme.colors.border,
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
@@ -286,7 +276,7 @@ fun DetailSurahScreen(
                                     state.downloadProgress.second
                                 ),
                                 fontSize = 11.sp,
-                                color = ColorMuted,
+                                color = AyatQuTheme.colors.textMuted,
                             )
                         }
                     }
@@ -298,19 +288,19 @@ fun DetailSurahScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(ColorSurface)
+                                .background(AyatQuTheme.colors.surface)
                                 .padding(horizontal = 24.dp, vertical = 16.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0652\u0631\u0651\u064E\u0645\u0652\u0639\u0650 \u0627\u0644\u0652\u0631\u0651\u064E\u062D\u0652\u0645\u064E\u0646\u0650\u064A",
                                 fontSize = 22.sp,
-                                color = ColorGold,
+                                color = AyatQuTheme.colors.accentGold,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
-                        HorizontalDivider(color = ColorBorder, thickness = 0.5.dp)
+                        HorizontalDivider(color = AyatQuTheme.colors.divider, thickness = 0.5.dp)
                     }
                 }
 
@@ -325,13 +315,17 @@ fun DetailSurahScreen(
                         isPreparingAudio = state.isPreparingAudio && state.playingAyah == ayah.ayahNumber,
                         isDownloaded = ayah.ayahNumber in state.downloadedAyahs,
                         isDownloading = ayah.ayahNumber in state.downloadingAyahs,
+                        isLastRead = state.currentLastRead?.let { lastRead ->
+                            lastRead.surahNumber == ayah.surahNumber &&
+                                lastRead.ayahNumber == ayah.ayahNumber
+                        } == true,
                         onPlayClick = { onEvent(DetailSurahEvent.PlayAyahClicked(ayah.ayahNumber)) },
                         onDownloadClick = { onEvent(DetailSurahEvent.DownloadAyahClicked(ayah.ayahNumber)) },
                         onSetLastRead = { onEvent(DetailSurahEvent.SetLastReadClicked(ayah.ayahNumber)) },
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 24.dp),
-                        color = ColorBorder,
+                        color = AyatQuTheme.colors.border,
                         thickness = 0.5.dp,
                     )
                 }
@@ -426,6 +420,7 @@ private fun AyahCard(
     isPreparingAudio: Boolean,
     isDownloaded: Boolean,
     isDownloading: Boolean,
+    isLastRead: Boolean,
     onPlayClick: () -> Unit,
     onDownloadClick: () -> Unit,
     onSetLastRead: () -> Unit,
@@ -433,7 +428,10 @@ private fun AyahCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isPlaying) ColorGold.copy(alpha = 0.06f) else ColorSurface)
+            .background(
+                if (isPlaying) AyatQuTheme.colors.accentGold.copy(alpha = 0.08f)
+                else AyatQuTheme.colors.surface
+            )
             .padding(horizontal = 24.dp, vertical = 16.dp),
     ) {
         // Ayah number badge + Arabic text
@@ -447,15 +445,15 @@ private fun AyahCard(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(ColorBadgeBg)
-                    .border(1.dp, ColorBorder, CircleShape),
+                    .background(AyatQuTheme.colors.surfaceVariant)
+                    .border(1.dp, AyatQuTheme.colors.border, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = ayah.ayahNumber.toString(),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ColorPrimary,
+                    color = AyatQuTheme.colors.primary,
                 )
             }
 
@@ -466,7 +464,7 @@ private fun AyahCard(
                 text = ayah.arabic,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Normal,
-                color = ColorTextPrimary,
+                color = AyatQuTheme.colors.textPrimary,
                 textAlign = TextAlign.End,
                 lineHeight = 40.sp,
                 modifier = Modifier.weight(1f),
@@ -481,7 +479,7 @@ private fun AyahCard(
                 text = ayah.transliteration,
                 fontSize = 13.sp,
                 fontStyle = FontStyle.Italic,
-                color = ColorMuted,
+                color = AyatQuTheme.colors.textMuted,
                 lineHeight = 20.sp,
             )
             Spacer(Modifier.height(6.dp))
@@ -494,7 +492,7 @@ private fun AyahCard(
                 text = translation,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
-                color = ColorTextPrimary.copy(alpha = 0.8f),
+                color = AyatQuTheme.colors.textSecondary,
                 lineHeight = 22.sp,
             )
         }
@@ -512,14 +510,22 @@ private fun AyahCard(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(ColorPrimary.copy(alpha = 0.08f))
+                    .background(
+                        if (isLastRead) AyatQuTheme.colors.primary else AyatQuTheme.colors.selectedSurface
+                    )
                     .clickable { onSetLastRead() },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.bookmark_stroke_rounded),
+                    painter = painterResource(
+                        id = if (isLastRead) {
+                            R.drawable.bookmark_solid_rounded
+                        } else {
+                            R.drawable.bookmark_stroke_rounded
+                        }
+                    ),
                     contentDescription = stringResource(R.string.set_last_read),
-                    tint = ColorPrimary,
+                    tint = if (isLastRead) AyatQuTheme.colors.onPrimary else AyatQuTheme.colors.primary,
                     modifier = Modifier.size(16.dp),
                 )
             }
@@ -528,14 +534,14 @@ private fun AyahCard(
 
             // Play/Download button
             val buttonColor = when {
-                isPlaying -> ColorGold
-                isDownloaded -> ColorPrimary
-                else -> ColorPrimary.copy(alpha = 0.08f)
+                isPlaying -> AyatQuTheme.colors.accentGold
+                isDownloaded -> AyatQuTheme.colors.primary
+                else -> AyatQuTheme.colors.selectedSurface
             }
             val iconTint = when {
-                isPlaying -> Color.White
-                isDownloaded -> Color.White
-                else -> ColorPrimary
+                isPlaying -> AyatQuTheme.colors.onPrimary
+                isDownloaded -> AyatQuTheme.colors.onPrimary
+                else -> AyatQuTheme.colors.primary
             }
             val clickable = isDownloaded || (!isDownloading)
 
@@ -555,7 +561,7 @@ private fun AyahCard(
                     isDownloading || isPreparingAudio -> {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
-                            color = if (isPreparingAudio) Color.White else ColorPrimary,
+                            color = if (isPreparingAudio) AyatQuTheme.colors.onPrimary else AyatQuTheme.colors.primary,
                             strokeWidth = 2.dp,
                         )
                     }
@@ -564,7 +570,7 @@ private fun AyahCard(
                         Icon(
                             imageVector = Pause,
                             contentDescription = stringResource(R.string.pause),
-                            tint = Color.White,
+                            tint = AyatQuTheme.colors.onPrimary,
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -573,7 +579,7 @@ private fun AyahCard(
                         Icon(
                             imageVector = Play,
                             contentDescription = stringResource(R.string.play),
-                            tint = Color.White,
+                            tint = AyatQuTheme.colors.onPrimary,
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -582,7 +588,7 @@ private fun AyahCard(
                         Icon(
                             imageVector = Download,
                             contentDescription = stringResource(R.string.download),
-                            tint = ColorPrimary,
+                            tint = AyatQuTheme.colors.primary,
                             modifier = Modifier.size(16.dp),
                         )
                     }
@@ -640,6 +646,11 @@ private fun PreviewDetailSurah() {
                 playingAyah = 2,
                 downloadedAyahs = setOf(1),
                 isPreparingAudio = false,
+                currentLastRead = LastRead(
+                    surahNumber = 1,
+                    ayahNumber = 1,
+                    surahName = "Al-Fatihah",
+                ),
             ),
             onEvent = {},
         )

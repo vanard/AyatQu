@@ -55,17 +55,6 @@ import id.vanard.ayatqu.presentation.quran.list.contract.OnQuranEvent
 import id.vanard.ayatqu.presentation.quran.list.contract.QuranEvent
 import id.vanard.ayatqu.presentation.quran.list.contract.QuranState
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-private val ColorPrimary        = Color(0xFF2D6B8C)
-private val ColorTextPrimary    = Color(0xFF2D2D2D)
-private val ColorGold           = Color(0xFFC19A6B)
-private val ColorMuted          = Color(0xFF8E8E93)
-private val ColorSurface        = Color(0xFFFFFFFF)
-private val ColorBgSubtle       = Color(0xFFF7F9FB)
-private val ColorBorder         = Color(0xFFF0F2F5)
-private val ColorBadgeBg        = Color(0xFFEFF6F9)
-private val ColorTabBg          = Color(0x80F0E6D2)  // 50% opacity
-
 private val quranTabs = listOf(R.string.tab_surah, R.string.tab_juz)
 
 @Composable
@@ -77,7 +66,7 @@ fun QuranScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ColorBgSubtle)
+            .background(AyatQuTheme.colors.background)
             .statusBarsPadding(),
     ) {
         QuranHeader(
@@ -142,7 +131,7 @@ private fun QuranHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ColorSurface)
+            .background(AyatQuTheme.colors.surface)
             .padding(horizontal = 24.dp, vertical = 16.dp),
     ) {
         Row(
@@ -154,7 +143,7 @@ private fun QuranHeader(
                 text = stringResource(R.string.al_quran),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = ColorPrimary,
+                color = AyatQuTheme.colors.primary,
                 letterSpacing = 1.5.sp,
             )
             QuranTabRow(
@@ -172,15 +161,15 @@ private fun QuranHeader(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(ColorBadgeBg)
-                .border(1.dp, ColorBorder, RoundedCornerShape(16.dp))
+                .background(AyatQuTheme.colors.surfaceVariant)
+                .border(1.dp, AyatQuTheme.colors.border, RoundedCornerShape(16.dp))
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = MagnifyingGlass,
                 contentDescription = null,
-                tint = ColorMuted,
+                tint = AyatQuTheme.colors.textMuted,
                 modifier = Modifier.size(20.dp),
             )
             Spacer(Modifier.width(12.dp))
@@ -190,7 +179,7 @@ private fun QuranHeader(
                         text = if (selectedTab == 0) stringResource(R.string.search_surah_hint)
                         else stringResource(R.string.search_juz_hint),
                         fontSize = 14.sp,
-                        color = ColorMuted,
+                        color = AyatQuTheme.colors.textMuted,
                     )
                 }
                 BasicTextField(
@@ -199,10 +188,10 @@ private fun QuranHeader(
                     singleLine = true,
                     textStyle = TextStyle(
                         fontSize = 14.sp,
-                        color = ColorTextPrimary,
+                        color = AyatQuTheme.colors.textPrimary,
                         fontWeight = FontWeight.Medium,
                     ),
-                    cursorBrush = SolidColor(ColorPrimary),
+                    cursorBrush = SolidColor(AyatQuTheme.colors.primary),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -217,7 +206,7 @@ private fun QuranHeader(
                     Icon(
                         imageVector = X,
                         contentDescription = stringResource(R.string.clear),
-                        tint = ColorMuted,
+                        tint = AyatQuTheme.colors.textMuted,
                         modifier = Modifier.size(16.dp),
                     )
                 }
@@ -237,7 +226,7 @@ private fun QuranTabRow(
     Row(
         modifier = Modifier
             .clip(CircleShape)
-            .background(ColorTabBg)
+            .background(AyatQuTheme.colors.surfaceVariant)
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -246,7 +235,7 @@ private fun QuranTabRow(
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(if (isSelected) Color.White else Color.Transparent)
+                    .background(if (isSelected) AyatQuTheme.colors.surface else Color.Transparent)
                     .clickable { onTabSelected(index) }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center,
@@ -255,7 +244,7 @@ private fun QuranTabRow(
                     text = stringResource(labelRes),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (isSelected) ColorGold else ColorMuted,
+                    color = if (isSelected) AyatQuTheme.colors.accentGold else AyatQuTheme.colors.textMuted,
                 )
             }
         }
@@ -286,7 +275,7 @@ private fun SurahList(
             SurahRow(surah = surah, onClick = { onSurahClick(surah.number) })
             HorizontalDivider(
                 modifier = Modifier.padding(start = 80.dp),
-                color = ColorBorder,
+                color = AyatQuTheme.colors.border,
                 thickness = 0.5.dp,
             )
         }
@@ -313,7 +302,7 @@ private fun SurahRow(surah: Surah, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ColorSurface)
+            .background(AyatQuTheme.colors.surface)
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -327,21 +316,21 @@ private fun SurahRow(surah: Surah, onClick: () -> Unit) {
                 text = surah.nameEnglish,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ColorTextPrimary,
+                color = AyatQuTheme.colors.textPrimary,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = surah.nameTranslation,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorMuted,
+                color = AyatQuTheme.colors.textMuted,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.surah_info, surah.versesCount, surah.revelationPlace.uppercase()),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ColorPrimary,
+                color = AyatQuTheme.colors.primary,
                 letterSpacing = 0.6.sp,
             )
         }
@@ -353,14 +342,14 @@ private fun SurahRow(surah: Surah, onClick: () -> Unit) {
                 text = surah.nameArabic,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ColorGold,
+                color = AyatQuTheme.colors.accentGold,
                 textAlign = TextAlign.End,
             )
             Spacer(Modifier.height(4.dp))
             Icon(
                 imageVector = CaretRight,
                 contentDescription = null,
-                tint = ColorMuted,
+                tint = AyatQuTheme.colors.textMuted,
                 modifier = Modifier.size(16.dp),
             )
         }
@@ -373,15 +362,15 @@ private fun SurahNumberBadge(number: Int) {
         modifier = Modifier
             .size(46.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(ColorBadgeBg)
-            .border(1.dp, ColorBorder, RoundedCornerShape(12.dp)),
+            .background(AyatQuTheme.colors.surfaceVariant)
+            .border(1.dp, AyatQuTheme.colors.border, RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = number.toString().padStart(3, '0'),
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
-            color = ColorPrimary,
+            color = AyatQuTheme.colors.primary,
             letterSpacing = 0.3.sp,
         )
     }
@@ -435,7 +424,7 @@ private fun JuzList(juzItems: List<JuzItem> = juzData) {
             JuzRow(juz = juz)
             HorizontalDivider(
                 modifier = Modifier.padding(start = 80.dp),
-                color = ColorBorder,
+                color = AyatQuTheme.colors.border,
                 thickness = 0.5.dp,
             )
         }
@@ -448,7 +437,7 @@ private fun JuzRow(juz: JuzItem) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ColorSurface)
+            .background(AyatQuTheme.colors.surface)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -461,21 +450,21 @@ private fun JuzRow(juz: JuzItem) {
                 text = stringResource(R.string.juz_number, juz.number),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ColorTextPrimary,
+                color = AyatQuTheme.colors.textPrimary,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = juz.surahName,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorMuted,
+                color = AyatQuTheme.colors.textMuted,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = juz.ayahRange,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ColorPrimary,
+                color = AyatQuTheme.colors.primary,
                 letterSpacing = 0.6.sp,
             )
         }
@@ -485,7 +474,7 @@ private fun JuzRow(juz: JuzItem) {
         Icon(
             imageVector = CaretRight,
             contentDescription = null,
-            tint = ColorMuted,
+            tint = AyatQuTheme.colors.textMuted,
             modifier = Modifier.size(16.dp),
         )
     }
@@ -497,7 +486,7 @@ private fun JuzRow(juz: JuzItem) {
 private fun LoadingState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
-            color = ColorPrimary,
+            color = AyatQuTheme.colors.primary,
             modifier = Modifier.size(40.dp),
         )
     }
@@ -516,27 +505,27 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
             text = stringResource(R.string.couldnt_load_surahs),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = ColorTextPrimary,
+            color = AyatQuTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = message,
             fontSize = 13.sp,
-            color = ColorMuted,
+            color = AyatQuTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(16.dp))
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(ColorPrimary)
+                .background(AyatQuTheme.colors.primary)
                 .clickable(onClick = onRetry)
                 .padding(horizontal = 24.dp, vertical = 10.dp),
         ) {
             Text(
                 text = stringResource(R.string.try_again),
-                color = Color.White,
+                color = AyatQuTheme.colors.onPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -557,14 +546,14 @@ private fun EmptySearchState(query: String) {
             text = stringResource(R.string.no_matches_for, query),
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = ColorTextPrimary,
+            color = AyatQuTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(6.dp))
         Text(
             text = stringResource(R.string.try_different_search),
             fontSize = 13.sp,
-            color = ColorMuted,
+            color = AyatQuTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
     }

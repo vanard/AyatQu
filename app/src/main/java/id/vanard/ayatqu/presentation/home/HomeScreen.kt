@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -48,18 +47,6 @@ import id.vanard.ayatqu.presentation.home.contract.HomeEvent
 import id.vanard.ayatqu.presentation.home.contract.HomeState
 import id.vanard.ayatqu.presentation.home.contract.OnHomeEvent
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-private val ColorPrimary      = Color(0xFF2D6B8C)
-private val ColorTextPrimary  = Color(0xFF2D2D2D)
-private val ColorGold         = Color(0xFFC19A6B)
-private val ColorMuted        = Color(0xFF8E8E93)
-private val ColorBorder       = Color(0xFFF9FAFB)
-private val ColorCardGradient = listOf(Color(0xFFF5E6CC), Color(0xFFF8F1E4), Color(0xFFFFFFFF))
-private val ColorCardBorder   = Color(0xFFEBE3D5)
-private val ColorBgSubtle     = Color(0xFFF7F9FB)
-private val ColorSurface      = Color(0xFFFFFFFF)
-private val ColorDivider      = Color(0xFFF0F2F5)
-
 @Composable
 fun HomeScreen(
     state: HomeState,
@@ -69,7 +56,7 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ColorBgSubtle)
+            .background(AyatQuTheme.colors.background)
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
@@ -131,14 +118,14 @@ private fun HomeHeader(userName: String, onQiblaClick: () -> Unit = {}) {
                 text = stringResource(R.string.welcome_user, userName.ifEmpty { stringResource(R.string.guest) }),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = ColorPrimary,
+                color = AyatQuTheme.colors.primary,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = stringResource(R.string.assalamualaikum),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorMuted,
+                color = AyatQuTheme.colors.textMuted,
             )
         }
 
@@ -153,7 +140,7 @@ private fun HomeHeader(userName: String, onQiblaClick: () -> Unit = {}) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_compass),
                 contentDescription = "Qibla",
-                tint = ColorGold,
+                tint = AyatQuTheme.colors.accentGold,
                 modifier = Modifier.size(32.dp),
             )
         }
@@ -172,8 +159,16 @@ private fun LastReadCard(
             .fillMaxWidth()
             .height(150.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(Brush.linearGradient(ColorCardGradient))
-            .border(1.dp, ColorCardBorder, RoundedCornerShape(24.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        AyatQuTheme.colors.lastReadGradientStart,
+                        AyatQuTheme.colors.lastReadGradientCenter,
+                        AyatQuTheme.colors.lastReadGradientEnd,
+                    )
+                )
+            )
+            .border(1.dp, AyatQuTheme.colors.border, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick),
     ) {
         // Mosque silhouette — right side, semi-transparent
@@ -186,7 +181,7 @@ private fun LastReadCard(
                 .offset(x = 10.dp),
             contentScale = ContentScale.Crop,
             alpha = 0.3f,
-            colorFilter = ColorFilter.tint(ColorGold),
+            colorFilter = ColorFilter.tint(AyatQuTheme.colors.accentGold),
         )
 
         // Text content
@@ -199,21 +194,21 @@ private fun LastReadCard(
                 text = stringResource(R.string.last_read),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = ColorTextPrimary,
+                color = AyatQuTheme.colors.textPrimary,
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 text = lastRead.surahName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = ColorTextPrimary,
+                color = AyatQuTheme.colors.textPrimary,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.ayah_no, lastRead.ayahNumber),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
-                color = ColorTextPrimary,
+                color = AyatQuTheme.colors.textPrimary,
                 letterSpacing = 0.6.sp,
             )
         }
@@ -241,7 +236,7 @@ private fun PrayerTimesSection(
         Icon(
             imageVector = Moon,
             contentDescription = null,
-            tint = ColorGold,
+            tint = AyatQuTheme.colors.accentGold,
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(8.dp))
@@ -249,14 +244,14 @@ private fun PrayerTimesSection(
             text = stringResource(R.string.prayer_times),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = ColorTextPrimary,
+            color = AyatQuTheme.colors.textPrimary,
         )
         Spacer(Modifier.weight(1f))
         Text(
             text = timezone ?: stringResource(R.string.your_location),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = ColorMuted,
+            color = AyatQuTheme.colors.textMuted,
         )
     }
 
@@ -284,7 +279,7 @@ private fun PrayerTimesSection(
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    color = ColorGold,
+                    color = AyatQuTheme.colors.accentGold,
                     modifier = Modifier.size(32.dp),
                 )
             }
@@ -307,8 +302,8 @@ private fun PrayerTimesCard(prayerTimes: List<PrayerTime>) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(ColorSurface)
-            .border(1.dp, ColorDivider, RoundedCornerShape(20.dp))
+            .background(AyatQuTheme.colors.surface)
+            .border(1.dp, AyatQuTheme.colors.divider, RoundedCornerShape(20.dp))
             .padding(horizontal = 20.dp, vertical = 4.dp),
     ) {
         prayerTimes.forEachIndexed { index, prayer ->
@@ -327,7 +322,7 @@ private fun PrayerTimesCard(prayerTimes: List<PrayerTime>) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(0.5.dp)
-                            .background(ColorDivider),
+                            .background(AyatQuTheme.colors.divider),
                     )
                 }
             }
@@ -351,14 +346,14 @@ private fun PrayerTimeRow(
             text = name,
             fontSize = 15.sp,
             fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
-            color = if (isNext) ColorPrimary else ColorTextPrimary,
+            color = if (isNext) AyatQuTheme.colors.primary else AyatQuTheme.colors.textPrimary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = time,
             fontSize = 15.sp,
             fontWeight = if (isNext) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (isNext) ColorPrimary else ColorTextPrimary,
+            color = if (isNext) AyatQuTheme.colors.primary else AyatQuTheme.colors.textPrimary,
         )
     }
 }
@@ -372,28 +367,28 @@ private fun PrayerTimesErrorCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(ColorSurface)
-            .border(1.dp, ColorDivider, RoundedCornerShape(20.dp))
+            .background(AyatQuTheme.colors.surface)
+            .border(1.dp, AyatQuTheme.colors.divider, RoundedCornerShape(20.dp))
             .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = message,
             fontSize = 14.sp,
-            color = ColorMuted,
+            color = AyatQuTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(12.dp))
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
-                .background(ColorGold)
+                .background(AyatQuTheme.colors.accentGold)
                 .clickable(onClick = onRetry)
                 .padding(horizontal = 20.dp, vertical = 8.dp),
         ) {
             Text(
                 text = stringResource(R.string.retry),
-                color = Color.White,
+                color = AyatQuTheme.colors.onPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -407,22 +402,22 @@ private fun LocationWarningCard(message: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(ColorGold.copy(alpha = 0.1f))
-            .border(1.dp, ColorGold.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .background(AyatQuTheme.colors.accentGold.copy(alpha = 0.1f))
+            .border(1.dp, AyatQuTheme.colors.accentGold.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Info,
             contentDescription = null,
-            tint = ColorGold,
+            tint = AyatQuTheme.colors.accentGold,
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(10.dp))
         Text(
             text = message,
             fontSize = 13.sp,
-            color = ColorTextPrimary,
+            color = AyatQuTheme.colors.textPrimary,
         )
     }
 }
@@ -453,7 +448,7 @@ private fun IconPlaceholder(size: Int) {
         modifier = Modifier
             .size(size.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(ColorBorder),
+            .background(AyatQuTheme.colors.border),
     )
 }
 
