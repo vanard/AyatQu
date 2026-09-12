@@ -15,9 +15,20 @@ class AyahAudioCache(context: Context) {
 
     private val cacheDir = File(context.filesDir, "quran_audio").apply { mkdirs() }
     private val indexFile = File(cacheDir, "index.json")
+    private val versionFile = File(cacheDir, "cache_version")
     private val gson = Gson()
 
-    private var index: MutableMap<String, String> = loadIndex()
+    private var index: MutableMap<String, String> = initializeCache()
+
+    private fun initializeCache(): MutableMap<String, String> {
+        if (versionFile.readTextOrNull() != CACHE_FORMAT_VERSION.toString()) {
+            cacheDir.deleteRecursively()
+            cacheDir.mkdirs()
+            versionFile.writeText(CACHE_FORMAT_VERSION.toString())
+            return mutableMapOf()
+        }
+        return loadIndex()
+    }
 
     private fun loadIndex(): MutableMap<String, String> {
         if (!indexFile.exists()) return mutableMapOf()
@@ -58,5 +69,13 @@ class AyahAudioCache(context: Context) {
 
     fun getAyahFile(surahNumber: Int, ayahNumber: Int): File {
         return File(cacheDir, "${surahNumber}_${ayahNumber}.mp3")
+    }
+
+    private fun File.readTextOrNull(): String? =
+        if (exists()) runCatching { readText() }.getOrNull() else null
+
+    private companion object {
+        // Version 1 could store a whole-surah URL under an individual ayah key.
+        const val CACHE_FORMAT_VERSION = 2
     }
 }

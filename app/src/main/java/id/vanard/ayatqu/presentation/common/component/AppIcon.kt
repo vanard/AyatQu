@@ -25,14 +25,14 @@ fun AppIcon(
     modifier: Modifier = Modifier,
     size: Dp = 120.dp,
     iconSize: Dp = 100.dp,
-    backgroundColor: Color = Color(0xFF033540),
+    backgroundColor: Color? = null,
 ) {
     Box(
         modifier = modifier
             .size(size)
             .shadow(24.dp, CircleShape)
             .clip(CircleShape)
-            .background(backgroundColor),
+            .background(backgroundColor ?: AyatQuTheme.colors.logoBackground),
         contentAlignment = Alignment.Center,
     ) {
         Image(

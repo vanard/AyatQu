@@ -75,27 +75,30 @@ class QuranRepositoryImpl(
             }
         }
 
-    /**
-     * Fetch audio URL for a single ayah on demand.
-     * Returns the audio URL string or null on failure.
-     */
-    override suspend fun getAyahAudioUrl(surahNumber: Int, ayahNumber: Int): String? =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                api.getAyahAudio(surahNumber, ayahNumber).data.audio
-            }.getOrNull()
-        }
+    override suspend fun getAyahAudioUrl(
+        surahNumber: Int,
+        ayahNumber: Int,
+    ): Result<String> = safeCall {
+        api.getAyahAudio(surahNumber, ayahNumber).data.firstAvailableAudioUrl()
+            ?: throw IOException("Audio URL is missing from the API response.")
+    }
 
     override suspend fun getAyah(surahNumber: Int, ayahNumber: Int): Result<Ayah> = safeCall {
         val verseResponse = api.getAyah(surahNumber, ayahNumber).data
         val verse = verseResponse.verse.toDomain(surahNumber)
         val audioResponse = api.getAyahAudio(surahNumber, ayahNumber).data
+        val audioUrl = audioResponse.firstAvailableAudioUrl()
+            ?: throw IOException("Audio URL is missing from the API response.")
+        val reciterName = audioResponse.reciters.orEmpty()
+            .firstOrNull { it.audioUrl == audioUrl }
+            ?.name
+            ?: audioResponse.reciter.orEmpty()
         val audio = listOf(
             AyahAudio(
                 reciterId = 0,
-                reciterName = audioResponse.reciter.orEmpty(),
-                surahAudioUrl = audioResponse.audio,
-                ayahAudioUrl = audioResponse.audio,
+                reciterName = reciterName,
+                surahAudioUrl = audioUrl,
+                ayahAudioUrl = audioUrl,
             )
         )
         verse.copy(audioUrls = audio)

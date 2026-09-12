@@ -1,0 +1,108 @@
+package id.vanard.ayatqu.core.ui.theme
+
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+
+@Immutable
+data class AyatQuColors(
+    val primary: Color,
+    val onPrimary: Color,
+    val background: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val selectedSurface: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val border: Color,
+    val divider: Color,
+    val accentGold: Color,
+    val error: Color,
+    val disabled: Color,
+    val logoBackground: Color,
+    val lastReadGradientStart: Color,
+    val lastReadGradientCenter: Color,
+    val lastReadGradientEnd: Color,
+    val authBackgroundStart: Color,
+    val authBackgroundEnd: Color,
+    val authScrimStart: Color,
+    val authScrimEnd: Color,
+)
+
+val LocalAyatQuColors = staticCompositionLocalOf {
+    AyatQuColors(
+        primary = Color.Unspecified,
+        onPrimary = Color.Unspecified,
+        background = Color.Unspecified,
+        surface = Color.Unspecified,
+        surfaceVariant = Color.Unspecified,
+        selectedSurface = Color.Unspecified,
+        textPrimary = Color.Unspecified,
+        textSecondary = Color.Unspecified,
+        textMuted = Color.Unspecified,
+        border = Color.Unspecified,
+        divider = Color.Unspecified,
+        accentGold = Color.Unspecified,
+        error = Color.Unspecified,
+        disabled = Color.Unspecified,
+        logoBackground = Color.Unspecified,
+        lastReadGradientStart = Color.Unspecified,
+        lastReadGradientCenter = Color.Unspecified,
+        lastReadGradientEnd = Color.Unspecified,
+        authBackgroundStart = Color.Unspecified,
+        authBackgroundEnd = Color.Unspecified,
+        authScrimStart = Color.Unspecified,
+        authScrimEnd = Color.Unspecified,
+    )
+}
+
+internal val AyatQuLightColors = AyatQuColors(
+    primary = Color(0xFF2D6B8C),
+    onPrimary = Color(0xFFFFFFFF),
+    background = Color(0xFFF7F9FB),
+    surface = Color(0xFFFFFFFF),
+    surfaceVariant = Color(0xFFEFF6F9),
+    selectedSurface = Color(0x142D6B8C),
+    textPrimary = Color(0xFF2D2D2D),
+    textSecondary = Color(0xFF5F6368),
+    textMuted = Color(0xFF8E8E93),
+    border = Color(0xFFF0F2F5),
+    divider = Color(0xFFF0F2F5),
+    accentGold = Color(0xFFC19A6B),
+    error = Color(0xFFE53E3E),
+    disabled = Color(0xFFD1D5DB),
+    logoBackground = Color(0xFF0B3D59),
+    lastReadGradientStart = Color(0xFFF5E6CC),
+    lastReadGradientCenter = Color(0xFFF8F1E4),
+    lastReadGradientEnd = Color(0xFFFFFFFF),
+    authBackgroundStart = Color(0xFF1C3A4A),
+    authBackgroundEnd = Color(0xFF0A1A24),
+    authScrimStart = Color(0x1A000000),
+    authScrimEnd = Color(0x99000000),
+)
+
+internal val AyatQuDarkColors = AyatQuColors(
+    primary = Color(0xFF3B82A6),
+    onPrimary = Color(0xFFFFFFFF),
+    background = Color(0xFF051A24),
+    surface = Color(0xFF0F3446),
+    surfaceVariant = Color(0xFF0B3D59),
+    selectedSurface = Color(0x293B82A6),
+    textPrimary = Color(0xFFF8FAFC),
+    textSecondary = Color(0xFFCBD5E1),
+    textMuted = Color(0xFF94A3B8),
+    border = Color(0xFF244A5A),
+    divider = Color(0xFF244A5A),
+    accentGold = Color(0xFFD0A66F),
+    error = Color(0xFFFF6B6B),
+    disabled = Color(0xFF4B5563),
+    logoBackground = Color(0xFF0B3D59),
+    lastReadGradientStart = Color(0xFF173E4E),
+    lastReadGradientCenter = Color(0xFF123545),
+    lastReadGradientEnd = Color(0xFF0F2F3E),
+    authBackgroundStart = Color(0xFF0A2A3A),
+    authBackgroundEnd = Color(0xFF051A24),
+    authScrimStart = Color(0x1A000000),
+    authScrimEnd = Color(0x99000000),
+)

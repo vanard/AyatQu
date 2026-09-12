@@ -51,7 +51,7 @@ val appModule = module {
     single { AyahAudioCache(androidContext()) }
     single { PrayerTimeCache(androidContext()) }
     single { AdhanPreference(androidContext()) }
-    single { LanguagePreference(androidContext()) }
+    singleOf(::LanguagePreference)
 
     // Firebase
     single { FirebaseAuth.getInstance() }

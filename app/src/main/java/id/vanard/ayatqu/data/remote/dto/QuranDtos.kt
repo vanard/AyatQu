@@ -95,8 +95,20 @@ data class AudioResponse(
 )
 
 data class AudioData(
-    @SerializedName("surah") val surah: Int,
-    @SerializedName("ayah") val ayah: Int,
-    @SerializedName("audio") val audio: String,
+    @SerializedName("audio") val audio: String?,
     @SerializedName("reciter") val reciter: String?,
+    @SerializedName("reciters") val reciters: List<AudioReciterDto>?,
+) {
+    fun firstAvailableAudioUrl(): String? =
+        reciters.orEmpty()
+            .firstNotNullOfOrNull { reciter -> reciter.audioUrl?.takeIf(String::isNotBlank) }
+            ?: audio?.takeIf(String::isNotBlank)
+}
+
+data class AudioReciterDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("name") val name: String,
+    @SerializedName("name_arabic") val nameArabic: String?,
+    @SerializedName("style") val style: String?,
+    @SerializedName("audio_url") val audioUrl: String?,
 )

@@ -41,11 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import id.vanard.ayatqu.R
-import id.vanard.ayatqu.core.ui.theme.BorderSubtle
-import id.vanard.ayatqu.core.ui.theme.AyatQuInputBg
-import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
-import id.vanard.ayatqu.core.ui.theme.AyatQuTextStrong
-import id.vanard.ayatqu.core.ui.theme.TextHint
+import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 
 // ── Background ────────────────────────────────────────────────────────────────
 
@@ -56,7 +52,10 @@ fun AuthBackground() {
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Color(0xFF1C3A4A), Color(0xFF0A1A24)),
+                    colors = listOf(
+                        AyatQuTheme.colors.authBackgroundStart,
+                        AyatQuTheme.colors.authBackgroundEnd,
+                    ),
                     start = Offset(0f, 0f),
                     end = Offset(0f, Float.POSITIVE_INFINITY)
                 )
@@ -67,7 +66,10 @@ fun AuthBackground() {
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Color(0x1A000000), Color(0x99000000)),
+                    colors = listOf(
+                        AyatQuTheme.colors.authScrimStart,
+                        AyatQuTheme.colors.authScrimEnd,
+                    ),
                     start = Offset(0f, 0f),
                     end = Offset(0f, Float.POSITIVE_INFINITY)
                 )
@@ -84,11 +86,11 @@ fun BackButtonLight(onClick: () -> Unit) {
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.15f)),
+            .background(AyatQuTheme.colors.onPrimary.copy(alpha = 0.15f)),
         contentAlignment = Alignment.Center
     ) {
         IconButton(onClick = onClick) {
-            ArrowBackIcon(color = Color.White)
+            ArrowBackIcon(color = AyatQuTheme.colors.onPrimary)
         }
     }
 }
@@ -100,11 +102,11 @@ fun BackButtonDark(onClick: () -> Unit) {
         modifier = Modifier
             .size(32.dp)
             .clip(CircleShape)
-            .background(AyatQuInputBg),
+            .background(AyatQuTheme.colors.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
         IconButton(onClick = onClick) {
-            ArrowBackIcon(color = AyatQuTextStrong)
+            ArrowBackIcon(color = AyatQuTheme.colors.textPrimary)
         }
     }
 }
@@ -151,7 +153,7 @@ fun AuthInputField(
     Text(
         text = label,
         style = MaterialTheme.typography.labelSmall,
-        color = TextHint
+        color = AyatQuTheme.colors.textMuted
     )
     Spacer(Modifier.height(6.dp))
     OutlinedTextField(
@@ -161,7 +163,7 @@ fun AuthInputField(
             Text(
                 text = placeholder,
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextHint
+                color = AyatQuTheme.colors.textMuted
             )
         },
         singleLine = true,
@@ -170,10 +172,10 @@ fun AuthInputField(
         trailingIcon = trailingIcon,
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = AyatQuInputBg,
-            focusedContainerColor = Color.White,
-            unfocusedBorderColor = BorderSubtle,
-            focusedBorderColor = AyatQuTextStrong,
+            unfocusedContainerColor = AyatQuTheme.colors.surfaceVariant,
+            focusedContainerColor = AyatQuTheme.colors.surface,
+            unfocusedBorderColor = AyatQuTheme.colors.border,
+            focusedBorderColor = AyatQuTheme.colors.primary,
         ),
         modifier = modifier.fillMaxWidth()
     )
@@ -187,13 +189,13 @@ fun OrDivider() {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        HorizontalDivider(modifier = Modifier.weight(1f), color = BorderSubtle)
+        HorizontalDivider(modifier = Modifier.weight(1f), color = AyatQuTheme.colors.divider)
         Text(
             text = stringResource(R.string.or_divider),
             style = MaterialTheme.typography.labelSmall,
-            color = TextHint
+            color = AyatQuTheme.colors.textMuted
         )
-        HorizontalDivider(modifier = Modifier.weight(1f), color = BorderSubtle)
+        HorizontalDivider(modifier = Modifier.weight(1f), color = AyatQuTheme.colors.divider)
     }
 }
 
@@ -212,17 +214,17 @@ fun SocialButton(
             .height(46.dp),
         shape = CircleShape,
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.White,
-            contentColor = AyatQuTextDark
+            containerColor = AyatQuTheme.colors.surface,
+            contentColor = AyatQuTheme.colors.textPrimary,
         ),
-        border = BorderStroke(1.dp, BorderSubtle)
+        border = BorderStroke(1.dp, AyatQuTheme.colors.border)
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
-            color = AyatQuTextStrong
+            color = AyatQuTheme.colors.textPrimary
         )
     }
 }

@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -38,10 +37,6 @@ import androidx.compose.ui.unit.sp
 import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.presentation.common.component.AppIcon
-import id.vanard.ayatqu.core.ui.theme.BorderSubtle
-import id.vanard.ayatqu.core.ui.theme.AyatQuSurface
-import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
-import id.vanard.ayatqu.core.ui.theme.TextHint
 import id.vanard.ayatqu.presentation.auth.landing.contract.LandingEvent
 import id.vanard.ayatqu.presentation.auth.landing.contract.LandingState
 import id.vanard.ayatqu.presentation.auth.landing.contract.OnLandingEvent
@@ -60,7 +55,10 @@ fun LandingScreen(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color(0xFF1C3A4A), Color(0xFF0A1A24)),
+                        colors = listOf(
+                            AyatQuTheme.colors.authBackgroundStart,
+                            AyatQuTheme.colors.authBackgroundEnd,
+                        ),
                         start = Offset(0f, 0f),
                         end = Offset(0f, Float.POSITIVE_INFINITY)
                     )
@@ -82,7 +80,7 @@ fun LandingScreen(
                     text = stringResource(R.string.skip),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = AyatQuTheme.colors.onPrimary.copy(alpha = 0.8f),
                     modifier = Modifier
                         .clickable { onEvent(LandingEvent.SkipClicked) }
                         .padding(8.dp)
@@ -107,7 +105,7 @@ fun LandingScreen(
                     text = stringResource(R.string.landing_headline),
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
+                    color = AyatQuTheme.colors.onPrimary,
                     textAlign = TextAlign.Center,
                     letterSpacing = (-0.2).sp,
                 )
@@ -118,7 +116,7 @@ fun LandingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(Color.White)
+                    .background(AyatQuTheme.colors.surface)
                     .navigationBarsPadding()
                     .padding(horizontal = 32.dp)
                     .padding(top = 32.dp, bottom = 40.dp),
@@ -134,8 +132,8 @@ fun LandingScreen(
                         .height(60.dp),
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AyatQuSurface,
-                        contentColor = Color.White
+                        containerColor = AyatQuTheme.colors.primary,
+                        contentColor = AyatQuTheme.colors.onPrimary,
                     )
                 ) {
                     Text(
@@ -157,10 +155,10 @@ fun LandingScreen(
                         .height(60.dp),
                     shape = CircleShape,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = AyatQuTextDark
+                        containerColor = AyatQuTheme.colors.surface,
+                        contentColor = AyatQuTheme.colors.textPrimary,
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AyatQuTheme.colors.border)
                 ) {
                     Text(
                         text = stringResource(R.string.sign_up),
@@ -177,7 +175,7 @@ fun LandingScreen(
                 Text(
                     text = stringResource(R.string.landing_legal),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextHint,
+                    color = AyatQuTheme.colors.textMuted,
                     textAlign = TextAlign.Center
                 )
             }

@@ -43,13 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import id.vanard.ayatqu.R
-import id.vanard.ayatqu.core.ui.theme.AccentCyan
-import id.vanard.ayatqu.core.ui.theme.AccentSky
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
-import id.vanard.ayatqu.core.ui.theme.BackgroundDeep
-import id.vanard.ayatqu.core.ui.theme.InactiveDot
-import id.vanard.ayatqu.core.ui.theme.Primary
-import id.vanard.ayatqu.core.ui.theme.SurfaceNavy
 import id.vanard.ayatqu.presentation.onboarding.contract.OnOnboardingEvent
 import id.vanard.ayatqu.presentation.onboarding.contract.OnboardingEvent
 import id.vanard.ayatqu.presentation.onboarding.contract.OnboardingState
@@ -58,7 +52,6 @@ private data class OnboardingPage(
     val titleRes: Int,
     val subtitleRes: Int,
     val ctaLabelRes: Int,
-    val activeDotColor: Color,
 )
 
 private val pages = listOf(
@@ -66,19 +59,16 @@ private val pages = listOf(
         titleRes = R.string.onboarding_title_1,
         subtitleRes = R.string.onboarding_subtitle_1,
         ctaLabelRes = R.string.onboarding_get_started,
-        activeDotColor = AccentCyan,
     ),
     OnboardingPage(
         titleRes = R.string.onboarding_title_2,
         subtitleRes = R.string.onboarding_subtitle_2,
         ctaLabelRes = R.string.next,
-        activeDotColor = AccentCyan,
     ),
     OnboardingPage(
         titleRes = R.string.onboarding_title_3,
         subtitleRes = R.string.onboarding_subtitle_3,
         ctaLabelRes = R.string.next,
-        activeDotColor = AccentSky,
     ),
 )
 
@@ -106,7 +96,10 @@ fun OnboardingScreen(
             .fillMaxSize()
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Color(0xFF0A2A3A), BackgroundDeep),
+                    colors = listOf(
+                        AyatQuTheme.colors.authBackgroundStart,
+                        AyatQuTheme.colors.authBackgroundEnd,
+                    ),
                     start = Offset(0f, 0f),
                     end = Offset(0f, Float.POSITIVE_INFINITY)
                 )
@@ -130,13 +123,13 @@ fun OnboardingScreen(
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
-                color = Color.White
+                color = AyatQuTheme.colors.onPrimary
             )
             TextButton(onClick = { onEvent(OnboardingEvent.SkipClicked) }) {
                 Text(
                     text = stringResource(R.string.skip),
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = AyatQuTheme.colors.onPrimary.copy(alpha = 0.8f)
                 )
             }
         }
@@ -152,7 +145,7 @@ fun OnboardingScreen(
             PaginationDots(
                 count = pages.size,
                 current = pagerState.currentPage,
-                activeColor = currentPage.activeDotColor
+                activeColor = AyatQuTheme.colors.primary
             )
 
             Spacer(Modifier.height(32.dp))
@@ -193,12 +186,12 @@ fun OnboardingScreen(
                         .weight(1f)
                         .height(56.dp),
                     shape = if (pagerState.currentPage == 0) RoundedCornerShape(16.dp) else CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = AyatQuTheme.colors.primary)
                 ) {
                     Text(
                         text = stringResource(currentPage.ctaLabelRes),
                         style = MaterialTheme.typography.labelLarge,
-                        color = Color.White
+                        color = AyatQuTheme.colors.onPrimary
                     )
                 }
             }
@@ -222,7 +215,7 @@ private fun PageContent(page: OnboardingPage) {
                 .fillMaxWidth()
                 .weight(1f)
                 .clip(RoundedCornerShape(24.dp))
-                .background(SurfaceNavy),
+                .background(AyatQuTheme.colors.surface),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -242,14 +235,14 @@ private fun PageContent(page: OnboardingPage) {
             Text(
                 text = stringResource(page.titleRes),
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
+                color = AyatQuTheme.colors.onPrimary,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(12.dp))
             Text(
                 text = stringResource(page.subtitleRes),
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.6f),
+                color = AyatQuTheme.colors.onPrimary.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
         }
@@ -258,12 +251,12 @@ private fun PageContent(page: OnboardingPage) {
 
 @Composable
 private fun BackCircleButton(onClick: () -> Unit) {
-    val arrowColor = Color.White
+    val arrowColor = AyatQuTheme.colors.onPrimary
     Box(
         modifier = Modifier
             .size(56.dp)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
+            .background(AyatQuTheme.colors.onPrimary.copy(alpha = 0.08f))
             .clickable(onClick = onClick)
             .drawWithCache {
                 val strokePx = 2.dp.toPx()
@@ -300,7 +293,7 @@ private fun PaginationDots(count: Int, current: Int, activeColor: Color) {
                     .height(8.dp)
                     .width(width)
                     .clip(CircleShape)
-                    .background(if (isActive) activeColor else InactiveDot)
+                    .background(if (isActive) activeColor else AyatQuTheme.colors.disabled)
             )
         }
     }

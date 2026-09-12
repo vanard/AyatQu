@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -44,10 +43,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
-import id.vanard.ayatqu.core.ui.theme.AyatQuSurface
-import id.vanard.ayatqu.core.ui.theme.AyatQuTextDark
-import id.vanard.ayatqu.core.ui.theme.AyatQuTextStrong
-import id.vanard.ayatqu.core.ui.theme.TextHint
 import id.vanard.ayatqu.presentation.common.component.AppIcon
 import id.vanard.ayatqu.presentation.auth.component.AuthBackground
 import id.vanard.ayatqu.presentation.auth.component.AuthInputField
@@ -87,7 +82,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(Color.White)
+                    .background(AyatQuTheme.colors.surface)
                     .navigationBarsPadding()
                     .imePadding()
                     .verticalScroll(rememberScrollState())
@@ -107,7 +102,7 @@ fun LoginScreen(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
                         ),
-                        color = AyatQuTextStrong
+                        color = AyatQuTheme.colors.textPrimary
                     )
                 }
 
@@ -116,7 +111,7 @@ fun LoginScreen(
                 Text(
                     text = stringResource(R.string.welcome_back),
                     style = MaterialTheme.typography.headlineSmall,
-                    color = AyatQuTextDark
+                    color = AyatQuTheme.colors.textPrimary
                 )
 
                 Spacer(Modifier.height(24.dp))
@@ -146,7 +141,7 @@ fun LoginScreen(
                             Text(
                                 text = if (state.passwordVisible) stringResource(R.string.hide) else stringResource(R.string.show),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = AyatQuTextStrong
+                                color = AyatQuTheme.colors.primary
                             )
                         }
                     }
@@ -161,7 +156,7 @@ fun LoginScreen(
                         Text(
                             text = stringResource(R.string.forgot_password),
                             style = MaterialTheme.typography.labelSmall,
-                            color = AyatQuTextStrong
+                            color = AyatQuTheme.colors.primary
                         )
                     }
                 }
@@ -187,13 +182,13 @@ fun LoginScreen(
                         .height(56.dp),
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AyatQuSurface,
-                        contentColor = Color.White
+                        containerColor = AyatQuTheme.colors.primary,
+                        contentColor = AyatQuTheme.colors.onPrimary,
                     )
                 ) {
                     if (state.isLoading) {
                         CircularProgressIndicator(
-                            color = Color.White,
+                            color = AyatQuTheme.colors.onPrimary,
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp
                         )
@@ -230,7 +225,7 @@ fun LoginScreen(
                     Text(
                         text = stringResource(R.string.no_account_prompt),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextHint
+                        color = AyatQuTheme.colors.textMuted
                     )
                     TextButton(onClick = { onEvent(LoginEvent.SignUpClicked) }) {
                         Text(
@@ -238,7 +233,7 @@ fun LoginScreen(
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = AyatQuTextDark
+                            color = AyatQuTheme.colors.primary
                         )
                     }
                 }

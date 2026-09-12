@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,11 +26,6 @@ import androidx.compose.ui.res.stringResource
 import id.vanard.ayatqu.R
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.core.ui.icon.WifiSlash
-
-private val ColorPrimary = Color(0xFF2D6B8C)
-private val ColorTextPrimary = Color(0xFF2D2D2D)
-private val ColorMuted = Color(0xFF8E8E93)
-private val ColorBgSubtle = Color(0xFFF7F9FB)
 
 /**
  * Reusable "No Connection" screen shown when the device is offline.
@@ -51,7 +45,7 @@ fun NoConnectionView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ColorBgSubtle)
+            .background(AyatQuTheme.colors.background)
             .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -59,7 +53,7 @@ fun NoConnectionView(
         Icon(
             imageVector = WifiSlash,
             contentDescription = null,
-            tint = ColorMuted,
+            tint = AyatQuTheme.colors.textMuted,
             modifier = Modifier.size(64.dp),
         )
 
@@ -69,7 +63,7 @@ fun NoConnectionView(
             text = stringResource(R.string.no_internet_title),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = ColorTextPrimary,
+            color = AyatQuTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
         )
 
@@ -78,7 +72,7 @@ fun NoConnectionView(
         Text(
             text = stringResource(R.string.no_internet_message),
             fontSize = 14.sp,
-            color = ColorMuted,
+            color = AyatQuTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
 
@@ -87,13 +81,13 @@ fun NoConnectionView(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(ColorPrimary)
+                .background(AyatQuTheme.colors.primary)
                 .clickable(onClick = onRetry)
                 .padding(horizontal = 32.dp, vertical = 12.dp),
         ) {
             Text(
                 text = stringResource(R.string.try_again),
-                color = Color.White,
+                color = AyatQuTheme.colors.onPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
             )
