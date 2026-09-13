@@ -114,7 +114,11 @@ fun ProfileScreen(
         MenuNavigationItem(
             icon = Globe,
             title = stringResource(R.string.language),
-            subtitle = if (state.currentLanguage == LanguagePreference.LANGUAGE_INDONESIAN) "Bahasa Indonesia" else stringResource(R.string.english),
+            subtitle = if (state.currentLanguage == LanguagePreference.LANGUAGE_INDONESIAN) {
+                stringResource(R.string.indonesian)
+            } else {
+                stringResource(R.string.english)
+            },
             onClick = { onEvent(ProfileEvent.LanguageClicked) }
         )
 
@@ -288,8 +292,8 @@ private fun LanguageSelectionDialog(
     onDismiss: () -> Unit,
 ) {
     val languages = listOf(
-        LanguagePreference.LANGUAGE_ENGLISH to "English",
-        LanguagePreference.LANGUAGE_INDONESIAN to "Bahasa Indonesia",
+        LanguagePreference.LANGUAGE_ENGLISH to stringResource(R.string.english),
+        LanguagePreference.LANGUAGE_INDONESIAN to stringResource(R.string.indonesian),
     )
 
     AlertDialog(

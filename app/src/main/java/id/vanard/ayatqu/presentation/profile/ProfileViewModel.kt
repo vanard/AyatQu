@@ -106,8 +106,9 @@ class ProfileViewModel(
     }
 
     private fun selectLanguage(code: String) {
-        setState { copy(showLanguageDialog = false, currentLanguage = code) }
-        languagePreference.setLanguage(code)
+        val languageCode = LanguagePreference.normalizeLanguageCode(code)
+        setState { copy(showLanguageDialog = false, currentLanguage = languageCode) }
+        setEffect(ProfileSideEffect.ApplyLanguage(languageCode))
     }
 
     private fun logout() {

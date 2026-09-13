@@ -1,6 +1,7 @@
 package id.vanard.ayatqu
 
 import id.vanard.ayatqu.core.navigation.AppNavigationCommand
+import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.navigation.directions.AuthDirection
 import id.vanard.ayatqu.navigation.directions.QuranDirection
@@ -32,6 +33,26 @@ class MviNavigationTest {
             bismillahPre = true,
         ),
     )
+
+    @Test
+    fun languageCodesResolveToSupportedResourceQualifiers() {
+        assertEquals(
+            LanguagePreference.LANGUAGE_ENGLISH,
+            LanguagePreference.normalizeLanguageCode("en"),
+        )
+        assertEquals(
+            LanguagePreference.LANGUAGE_INDONESIAN,
+            LanguagePreference.normalizeLanguageCode("id"),
+        )
+        assertEquals(
+            LanguagePreference.LANGUAGE_INDONESIAN,
+            LanguagePreference.normalizeLanguageCode("in"),
+        )
+        assertEquals(
+            LanguagePreference.LANGUAGE_ENGLISH,
+            LanguagePreference.normalizeLanguageCode("fr"),
+        )
+    }
 
     @Test
     fun quranStateFiltersByNameTranslationArabicAndNumber() {

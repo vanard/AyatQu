@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.Lifecycle
 import id.vanard.ayatqu.core.navigation.NavigationManager
+import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.navigation.directions.AuthDirection
 import id.vanard.ayatqu.presentation.profile.contract.ProfileEvent
 import id.vanard.ayatqu.presentation.profile.contract.ProfileSideEffect
@@ -32,6 +33,7 @@ fun ProfileRouter(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = koinViewModel(),
     navigationManager: NavigationManager = koinInject(),
+    languagePreference: LanguagePreference = koinInject(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -76,6 +78,9 @@ fun ProfileRouter(
                             PermissionHelper.getNotificationPermission()
                         )
                     }
+                }
+                is ProfileSideEffect.ApplyLanguage -> {
+                    languagePreference.setLanguage(effect.languageCode)
                 }
                 is ProfileSideEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
             }

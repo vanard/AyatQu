@@ -10,20 +10,26 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
+import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.navigation.routes.AuthRoute
 import id.vanard.ayatqu.navigation.routes.MainRoute
 import id.vanard.ayatqu.presentation.root.AppViewModel
 import id.vanard.ayatqu.presentation.root.StartDestination
 import id.vanard.ayatqu.presentation.root.navigation.NavigationRoot
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: AppViewModel by viewModel()
+    private val languagePreference: LanguagePreference by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        // AppCompat restores saved locales during onCreate on Android 12 and below.
+        // Apply English only when there is no saved app language, before composing UI.
+        languagePreference.applySavedLanguageOrDefault()
 
         // Hold splash screen until the start destination is resolved
         splashScreen.setKeepOnScreenCondition {

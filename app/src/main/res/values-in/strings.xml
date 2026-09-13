@@ -1,4 +1,6 @@
 <resources>
+    <!-- Android's resource loader uses the legacy "in" qualifier for Indonesian.
+         Keep the app language tag and locales_config.xml as "id". -->
     <string name="app_name">AyatQu</string>
 
     <!-- Landing -->
@@ -98,6 +100,7 @@
     <string name="light_mode">Mode terang</string>
     <string name="language">Bahasa</string>
     <string name="english">Inggris</string>
+    <string name="indonesian">Bahasa Indonesia</string>
     <string name="other">Lainnya</string>
     <string name="rate_app">Beri Rating</string>
     <string name="enjoying_leave_review">Menikmati? Berikan ulasan</string>
