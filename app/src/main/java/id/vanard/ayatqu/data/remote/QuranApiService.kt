@@ -4,6 +4,7 @@ import id.vanard.ayatqu.data.remote.dto.AyahResponse
 import id.vanard.ayatqu.data.remote.dto.AudioResponse
 import id.vanard.ayatqu.data.remote.dto.SurahDetailResponse
 import id.vanard.ayatqu.data.remote.dto.SurahListResponse
+import id.vanard.ayatqu.data.remote.dto.JuzResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -12,6 +13,12 @@ interface QuranApiService {
     /** Get all 114 surahs */
     @GET("quran/surahs")
     suspend fun getSurahs(): SurahListResponse
+
+    /** Get every verse in one of the 30 Quran juz. */
+    @GET("quran/juz/{juzNumber}")
+    suspend fun getJuz(
+        @Path("juzNumber") juzNumber: Int,
+    ): JuzResponse
 
     /**
      * Get surah detail with all verses and translations.

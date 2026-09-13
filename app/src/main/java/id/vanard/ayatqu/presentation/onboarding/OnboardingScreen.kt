@@ -3,7 +3,7 @@ package id.vanard.ayatqu.presentation.onboarding
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,13 +31,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +54,7 @@ private data class OnboardingPage(
     val titleRes: Int,
     val subtitleRes: Int,
     val ctaLabelRes: Int,
+    val backgroundRes: Int,
 )
 
 private val pages = listOf(
@@ -59,16 +62,19 @@ private val pages = listOf(
         titleRes = R.string.onboarding_title_1,
         subtitleRes = R.string.onboarding_subtitle_1,
         ctaLabelRes = R.string.onboarding_get_started,
+        backgroundRes = R.drawable.onboarding_background_1,
     ),
     OnboardingPage(
         titleRes = R.string.onboarding_title_2,
         subtitleRes = R.string.onboarding_subtitle_2,
         ctaLabelRes = R.string.next,
+        backgroundRes = R.drawable.onboarding_background_2,
     ),
     OnboardingPage(
         titleRes = R.string.onboarding_title_3,
         subtitleRes = R.string.onboarding_subtitle_3,
         ctaLabelRes = R.string.next,
+        backgroundRes = R.drawable.onboarding_background_3,
     ),
 )
 
@@ -94,16 +100,6 @@ fun OnboardingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        AyatQuTheme.colors.authBackgroundStart,
-                        AyatQuTheme.colors.authBackgroundEnd,
-                    ),
-                    start = Offset(0f, 0f),
-                    end = Offset(0f, Float.POSITIVE_INFINITY)
-                )
-            )
     ) {
         HorizontalPager(
             state = pagerState,
@@ -201,37 +197,34 @@ fun OnboardingScreen(
 
 @Composable
 private fun PageContent(page: OnboardingPage) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(120.dp)) // space for static header
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(page.backgroundRes),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
 
-        // Mosque illustration area — replace Box content with actual image asset
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .clip(RoundedCornerShape(24.dp))
-                .background(AyatQuTheme.colors.surface),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "🕌",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
-            )
-        }
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.48f),
+                        0.30f to Color.Black.copy(alpha = 0.06f),
+                        0.58f to Color.Black.copy(alpha = 0.22f),
+                        1f to Color.Black.copy(alpha = 0.84f),
+                    )
+                )
+        )
 
-        // Section heading and subtitle are rendered in the overlay via bottom controls padding
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp, bottom = 200.dp),
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.weight(1f))
             Text(
                 text = stringResource(page.titleRes),
                 style = MaterialTheme.typography.headlineMedium,
@@ -245,6 +238,7 @@ private fun PageContent(page: OnboardingPage) {
                 color = AyatQuTheme.colors.onPrimary.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
+            Spacer(Modifier.height(200.dp))
         }
     }
 }

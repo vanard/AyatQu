@@ -1,0 +1,36 @@
+package id.vanard.ayatqu.domain.model
+
+object JuzCatalog {
+    val items = listOf(
+        JuzSummary(1, "Al-Fatihah", 1, "Al-Baqarah", 141),
+        JuzSummary(2, "Al-Baqarah", 142, "Al-Baqarah", 252),
+        JuzSummary(3, "Al-Baqarah", 253, "Ali 'Imran", 92),
+        JuzSummary(4, "Ali 'Imran", 93, "An-Nisa", 23),
+        JuzSummary(5, "An-Nisa", 24, "An-Nisa", 147),
+        JuzSummary(6, "An-Nisa", 148, "Al-Ma'idah", 81),
+        JuzSummary(7, "Al-Ma'idah", 82, "Al-An'am", 110),
+        JuzSummary(8, "Al-An'am", 111, "Al-A'raf", 87),
+        JuzSummary(9, "Al-A'raf", 88, "Al-Anfal", 40),
+        JuzSummary(10, "Al-Anfal", 41, "At-Tawbah", 92),
+        JuzSummary(11, "At-Tawbah", 93, "Hud", 5),
+        JuzSummary(12, "Hud", 6, "Yusuf", 52),
+        JuzSummary(13, "Yusuf", 53, "Ibrahim", 52),
+        JuzSummary(14, "Al-Hijr", 1, "An-Nahl", 128),
+        JuzSummary(15, "Al-Isra", 1, "Al-Kahf", 74),
+        JuzSummary(16, "Al-Kahf", 75, "Ta-Ha", 135),
+        JuzSummary(17, "Al-Anbiya", 1, "Al-Hajj", 78),
+        JuzSummary(18, "Al-Mu'minun", 1, "Al-Furqan", 20),
+        JuzSummary(19, "Al-Furqan", 21, "An-Naml", 55),
+        JuzSummary(20, "An-Naml", 56, "Al-'Ankabut", 45),
+        JuzSummary(21, "Al-'Ankabut", 46, "Al-Ahzab", 30),
+        JuzSummary(22, "Al-Ahzab", 31, "Ya-Sin", 27),
+        JuzSummary(23, "Ya-Sin", 28, "Az-Zumar", 31),
+        JuzSummary(24, "Az-Zumar", 32, "Fussilat", 46),
+        JuzSummary(25, "Fussilat", 47, "Al-Jathiyah", 37),
+        JuzSummary(26, "Al-Ahqaf", 1, "Adh-Dhariyat", 30),
+        JuzSummary(27, "Adh-Dhariyat", 31, "Al-Hadid", 29),
+        JuzSummary(28, "Al-Mujadilah", 1, "At-Tahrim", 12),
+        JuzSummary(29, "Al-Mulk", 1, "Al-Mursalat", 50),
+        JuzSummary(30, "An-Naba", 1, "An-Nas", 6),
+    )
+}

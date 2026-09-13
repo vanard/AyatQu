@@ -53,6 +53,24 @@ class MviNavigationTest {
     }
 
     @Test
+    fun juzDirectionCarriesTypedArgument() {
+        val command: AppNavigationCommand = QuranDirection.juz(30)
+
+        assertTrue(command is AppNavigationCommand.Navigate)
+        assertEquals(
+            QuranRoute.JuzDetail(juzNumber = 30),
+            (command as AppNavigationCommand.Navigate).route,
+        )
+    }
+
+    @Test
+    fun quranStateFiltersJuzByNumberAndBoundarySurah() {
+        assertEquals(listOf(30), QuranState(query = "30").filteredJuzs.map { it.number })
+        assertEquals(listOf(1), QuranState(query = "fatihah").filteredJuzs.map { it.number })
+        assertEquals(listOf(30), QuranState(query = "nas").filteredJuzs.map { it.number })
+    }
+
+    @Test
     fun authenticatedHomeDirectionClearsThePreviousFlow() {
         val command: AppNavigationCommand = AuthDirection.home
 

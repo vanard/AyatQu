@@ -4,6 +4,7 @@ sealed interface QuranEvent {
     data class QueryChanged(val query: String) : QuranEvent
     data class TabSelected(val index: Int) : QuranEvent
     data class SurahClicked(val surahNumber: Int) : QuranEvent
+    data class JuzClicked(val juzNumber: Int) : QuranEvent
     data object ClearQueryClicked : QuranEvent
     data object RetryClicked : QuranEvent
 }

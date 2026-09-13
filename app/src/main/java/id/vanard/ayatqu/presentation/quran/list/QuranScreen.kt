@@ -20,37 +20,34 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import id.vanard.ayatqu.R
-import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
-import id.vanard.ayatqu.domain.model.Surah
-import id.vanard.ayatqu.presentation.common.component.NoConnectionView
 import id.vanard.ayatqu.core.ui.icon.CaretRight
 import id.vanard.ayatqu.core.ui.icon.MagnifyingGlass
 import id.vanard.ayatqu.core.ui.icon.X
+import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
+import id.vanard.ayatqu.domain.model.Surah
+import id.vanard.ayatqu.domain.model.JuzSummary
+import id.vanard.ayatqu.presentation.common.component.NoConnectionView
 import id.vanard.ayatqu.presentation.quran.list.contract.OnQuranEvent
 import id.vanard.ayatqu.presentation.quran.list.contract.QuranEvent
 import id.vanard.ayatqu.presentation.quran.list.contract.QuranState
@@ -102,16 +99,13 @@ fun QuranScreen(
                 }
             }
             state.selectedTab == 1 -> {
-                // Juz tab
-                val filteredJuz = if (state.query.isBlank()) juzData
-                else juzData.filter {
-                    it.surahName.lowercase().contains(state.query.trim().lowercase()) ||
-                        it.number.toString() == state.query.trim()
-                }
-                if (filteredJuz.isEmpty() && state.query.isNotBlank()) {
+                if (state.filteredJuzs.isEmpty() && state.query.isNotBlank()) {
                     EmptySearchState(query = state.query)
                 } else {
-                    JuzList(juzItems = filteredJuz)
+                    JuzList(
+                        juzItems = state.filteredJuzs,
+                        onJuzClick = { onEvent(QuranEvent.JuzClicked(it)) },
+                    )
                 }
             }
         }
@@ -378,50 +372,14 @@ private fun SurahNumberBadge(number: Int) {
 
 // ── Juz list ──────────────────────────────────────────────────────────────────
 
-private data class JuzItem(
-    val number: Int,
-    val surahName: String,
-    val ayahRange: String,
-)
-
-private val juzData = listOf(
-    JuzItem(1,  "Al-Fatihah",  "1:1 – Al-Baqarah 141"),
-    JuzItem(2,  "Al-Baqarah",  "142 – Al-Baqarah 252"),
-    JuzItem(3,  "Al-Baqarah",  "253 – Ali 'Imran 92"),
-    JuzItem(4,  "Ali 'Imran",  "93 – An-Nisa 23"),
-    JuzItem(5,  "An-Nisa",     "24 – An-Nisa 147"),
-    JuzItem(6,  "An-Nisa",     "148 – Al-Ma'idah 81"),
-    JuzItem(7,  "Al-Ma'idah",  "82 – Al-An'am 110"),
-    JuzItem(8,  "Al-An'am",    "111 – Al-A'raf 87"),
-    JuzItem(9,  "Al-A'raf",    "88 – Al-Anfal 40"),
-    JuzItem(10, "Al-Anfal",    "41 – At-Tawbah 92"),
-    JuzItem(11, "At-Tawbah",   "93 – Hud 5"),
-    JuzItem(12, "Hud",         "6 – Yusuf 52"),
-    JuzItem(13, "Yusuf",       "53 – Ibrahim 52"),
-    JuzItem(14, "Al-Hijr",     "1 – An-Nahl 128"),
-    JuzItem(15, "Al-Isra",     "1 – Al-Kahf 74"),
-    JuzItem(16, "Al-Kahf",     "75 – Ta-Ha 135"),
-    JuzItem(17, "Al-Anbiya",   "1 – Al-Hajj 78"),
-    JuzItem(18, "Al-Mu'minun","1 – Al-Furqan 20"),
-    JuzItem(19, "Al-Furqan",   "21 – An-Naml 55"),
-    JuzItem(20, "An-Naml",     "56 – Al-'Ankabut 45"),
-    JuzItem(21, "Al-'Ankabut", "46 – Al-Ahzab 30"),
-    JuzItem(22, "Al-Ahzab",    "31 – Ya-Sin 27"),
-    JuzItem(23, "Ya-Sin",      "28 – Az-Zumar 31"),
-    JuzItem(24, "Az-Zumar",    "32 – Fussilat 46"),
-    JuzItem(25, "Fussilat",    "47 – Al-Jathiyah 37"),
-    JuzItem(26, "Al-Ahqaf",    "1 – Adh-Dhariyat 30"),
-    JuzItem(27, "Adh-Dhariyat","31 – Al-Hadid 29"),
-    JuzItem(28, "Al-Mujadilah","1 – At-Tahrim 12"),
-    JuzItem(29, "Al-Mulk",     "1 – Al-Mursalat 50"),
-    JuzItem(30, "An-Naba",     "1 – An-Nas 6"),
-)
-
 @Composable
-private fun JuzList(juzItems: List<JuzItem> = juzData) {
+private fun JuzList(
+    juzItems: List<JuzSummary>,
+    onJuzClick: (Int) -> Unit,
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(items = juzItems, key = { it.number }) { juz ->
-            JuzRow(juz = juz)
+            JuzRow(juz = juz, onClick = { onJuzClick(juz.number) })
             HorizontalDivider(
                 modifier = Modifier.padding(start = 80.dp),
                 color = AyatQuTheme.colors.border,
@@ -433,11 +391,12 @@ private fun JuzList(juzItems: List<JuzItem> = juzData) {
 }
 
 @Composable
-private fun JuzRow(juz: JuzItem) {
+private fun JuzRow(juz: JuzSummary, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(AyatQuTheme.colors.surface)
+            .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -454,14 +413,14 @@ private fun JuzRow(juz: JuzItem) {
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = juz.surahName,
+                text = juz.startSurahName,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = AyatQuTheme.colors.textMuted,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = juz.ayahRange,
+                text = juz.rangeLabel,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = AyatQuTheme.colors.primary,

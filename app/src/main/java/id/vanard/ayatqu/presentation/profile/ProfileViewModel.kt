@@ -10,6 +10,7 @@ import id.vanard.ayatqu.data.AdhanPreference
 import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.data.PrayerTimeCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
+import id.vanard.ayatqu.data.local.JuzLocalCache
 import id.vanard.ayatqu.domain.usecase.AuthUseCase
 import id.vanard.ayatqu.presentation.common.viewmodel.BaseMviViewModel
 import id.vanard.ayatqu.presentation.profile.contract.ProfileEvent
@@ -29,6 +30,7 @@ class ProfileViewModel(
     private val languagePreference: LanguagePreference,
     private val prayerTimeCache: PrayerTimeCache,
     private val surahLocalCache: SurahLocalCache,
+    private val juzLocalCache: JuzLocalCache,
 ) : BaseMviViewModel<ProfileState, ProfileEvent, ProfileSideEffect>(
     ProfileState(
         isLoggedIn = authUseCase.currentUser != null,
@@ -122,6 +124,7 @@ class ProfileViewModel(
             withContext(Dispatchers.IO) {
                 prayerTimeCache.clearCache()
                 surahLocalCache.clear()
+                juzLocalCache.clear()
             }
             setEffect(ProfileSideEffect.ShowMessage(application.getString(R.string.cache_cleared)))
         }

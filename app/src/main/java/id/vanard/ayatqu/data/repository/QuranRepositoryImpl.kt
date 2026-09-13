@@ -3,12 +3,15 @@ package id.vanard.ayatqu.data.repository
 import id.vanard.ayatqu.data.LastReadPreference
 import id.vanard.ayatqu.data.local.SurahDetailLocalCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
+import id.vanard.ayatqu.data.local.JuzLocalCache
 import id.vanard.ayatqu.data.remote.QuranApiService
 import id.vanard.ayatqu.data.remote.dto.TranslationsDto
 import id.vanard.ayatqu.data.remote.dto.VerseDto
 import id.vanard.ayatqu.domain.model.Ayah
 import id.vanard.ayatqu.domain.model.AyahAudio
 import id.vanard.ayatqu.domain.model.LastRead
+import id.vanard.ayatqu.domain.model.Juz
+import id.vanard.ayatqu.domain.model.JuzVerse
 import id.vanard.ayatqu.domain.model.Surah
 import id.vanard.ayatqu.domain.repository.QuranRepository
 import id.vanard.ayatqu.util.NetworkUtils
@@ -23,6 +26,7 @@ class QuranRepositoryImpl(
     private val lastReadPreference: LastReadPreference,
     private val surahLocalCache: SurahLocalCache,
     private val surahDetailLocalCache: SurahDetailLocalCache,
+    private val juzLocalCache: JuzLocalCache,
 ) : QuranRepository {
 
     override suspend fun getSurahs(): Result<List<Surah>> = withContext(Dispatchers.IO) {
@@ -81,6 +85,34 @@ class QuranRepositoryImpl(
     ): Result<String> = safeCall {
         api.getAyahAudio(surahNumber, ayahNumber).data.firstAvailableAudioUrl()
             ?: throw IOException("Audio URL is missing from the API response.")
+    }
+
+    override suspend fun getJuz(juzNumber: Int): Result<Juz> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(juzNumber in 1..30) { "Juz number must be between 1 and 30." }
+            juzLocalCache.read(juzNumber)?.let { return@runCatching it }
+
+            if (!networkUtils.isNetworkAvailable()) {
+                throw IOException("No internet connection and no cached Juz available.")
+            }
+
+            val data = api.getJuz(juzNumber).data
+            Juz(
+                number = data.juzNumber,
+                totalVerses = data.totalVerses,
+                verses = data.verses.map { verse ->
+                    JuzVerse(
+                        surahNumber = verse.verseKey.substringBefore(':').toInt(),
+                        surahName = verse.surahName,
+                        ayahNumber = verse.ayah,
+                        verseKey = verse.verseKey,
+                        arabic = verse.arabic,
+                        transliteration = verse.transliteration.orEmpty(),
+                        translations = verse.translations?.toTranslationMap().orEmpty(),
+                    )
+                },
+            ).also { juzLocalCache.write(it) }
+        }
     }
 
     override suspend fun getAyah(surahNumber: Int, ayahNumber: Int): Result<Ayah> = safeCall {

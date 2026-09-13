@@ -25,6 +25,9 @@ fun QuranRouter(
                 is QuranSideEffect.NavigateToSurah -> navigationManager.navigate(
                     QuranDirection.detail(effect.surahNumber)
                 )
+                is QuranSideEffect.NavigateToJuz -> navigationManager.navigate(
+                    QuranDirection.juz(effect.juzNumber)
+                )
             }
         }
     }

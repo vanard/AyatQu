@@ -32,6 +32,7 @@ class QuranViewModel(
             is QuranEvent.QueryChanged -> setState { copy(query = event.query) }
             is QuranEvent.TabSelected -> setState { copy(selectedTab = event.index.coerceIn(0, 1)) }
             is QuranEvent.SurahClicked -> setEffect(QuranSideEffect.NavigateToSurah(event.surahNumber))
+            is QuranEvent.JuzClicked -> setEffect(QuranSideEffect.NavigateToJuz(event.juzNumber))
             QuranEvent.ClearQueryClicked -> setState { copy(query = "") }
             QuranEvent.RetryClicked -> loadSurahs()
         }

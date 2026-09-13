@@ -46,6 +46,28 @@ data class VerseDto(
     @SerializedName("translations") val translations: TranslationsDto?,
 )
 
+// ── Juz detail ───────────────────────────────────────────────────────────────
+
+data class JuzResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("data") val data: JuzData,
+)
+
+data class JuzData(
+    @SerializedName("juz_number") val juzNumber: Int,
+    @SerializedName("total_verses") val totalVerses: Int,
+    @SerializedName("verses") val verses: List<JuzVerseDto>,
+)
+
+data class JuzVerseDto(
+    @SerializedName("verse_key") val verseKey: String,
+    @SerializedName("surah_name") val surahName: String,
+    @SerializedName("ayah") val ayah: Int,
+    @SerializedName("arabic") val arabic: String,
+    @SerializedName("transliteration") val transliteration: String?,
+    @SerializedName("translations") val translations: TranslationsDto?,
+)
+
 data class TranslationsDto(
     @SerializedName("sahih_international") val sahihInternational: String?,
     @SerializedName("indonesian") val indonesian: String?,

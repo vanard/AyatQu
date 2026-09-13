@@ -39,6 +39,13 @@
     <string name="clear">Hapus</string>
     <string name="surah_info">%1$d AYAT \u2022 %2$s</string>
     <string name="juz_number">Juz %1$d</string>
+    <string name="juz_ayah_count">%1$d ayat</string>
+    <string name="couldnt_load_juz">Tidak dapat memuat Juz ini</string>
+    <string name="open_in_surah">Buka di Surah</string>
+    <string name="juz_ayah_position_hint">Posisi ayat dalam Juz ini</string>
+    <string name="juz_ayah_position_range">Masukkan posisi dari 1 sampai %1$d</string>
+    <string name="ayah_download_failed">Tidak dapat mengunduh ayat %1$s: %2$s</string>
+    <string name="audio_download_failures">%1$d file audio tidak dapat diunduh</string>
     <string name="couldnt_load_surahs">Tidak dapat memuat surah</string>
     <string name="try_again">Coba Lagi</string>
     <string name="no_matches_for">Tidak ada hasil untuk \"%1$s\"</string>

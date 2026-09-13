@@ -10,4 +10,9 @@ sealed interface QuranRoute : NavKey {
         val surahNumber: Int,
         val ayahNumber: Int? = null,
     ) : QuranRoute
+
+    @Serializable
+    data class JuzDetail(
+        val juzNumber: Int,
+    ) : QuranRoute
 }

@@ -39,6 +39,13 @@
     <string name="clear">Clear</string>
     <string name="surah_info">%1$d AYAHS \u2022 %2$s</string>
     <string name="juz_number">Juz %1$d</string>
+    <string name="juz_ayah_count">%1$d ayahs</string>
+    <string name="couldnt_load_juz">Couldn\'t load this Juz</string>
+    <string name="open_in_surah">Open in Surah</string>
+    <string name="juz_ayah_position_hint">Ayah position in this Juz</string>
+    <string name="juz_ayah_position_range">Enter a position from 1 to %1$d</string>
+    <string name="ayah_download_failed">Couldn\'t download ayah %1$s: %2$s</string>
+    <string name="audio_download_failures">%1$d audio files could not be downloaded</string>
     <string name="couldnt_load_surahs">Couldn\'t load surahs</string>
     <string name="try_again">Try Again</string>
     <string name="no_matches_for">No matches for \"%1$s\"</string>

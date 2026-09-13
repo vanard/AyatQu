@@ -7,6 +7,7 @@ import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.data.OnboardingPreference
 import id.vanard.ayatqu.data.PrayerTimeCache
 import id.vanard.ayatqu.data.local.AyahAudioCache
+import id.vanard.ayatqu.data.local.JuzLocalCache
 import id.vanard.ayatqu.data.local.SurahDetailLocalCache
 import id.vanard.ayatqu.data.local.SurahLocalCache
 import id.vanard.ayatqu.data.remote.PrayerTimeApiService
@@ -30,6 +31,7 @@ import id.vanard.ayatqu.presentation.onboarding.OnboardingViewModel
 import id.vanard.ayatqu.presentation.profile.ProfileViewModel
 import id.vanard.ayatqu.presentation.quran.detail.DetailSurahViewModel
 import id.vanard.ayatqu.presentation.quran.list.QuranViewModel
+import id.vanard.ayatqu.presentation.quran.juz.JuzDetailViewModel
 import id.vanard.ayatqu.presentation.root.AppViewModel
 import id.vanard.ayatqu.util.LocationHelper
 import id.vanard.ayatqu.util.NetworkUtils
@@ -49,6 +51,7 @@ val appModule = module {
     single { SurahLocalCache(androidContext()) }
     single { SurahDetailLocalCache(androidContext()) }
     single { AyahAudioCache(androidContext()) }
+    single { JuzLocalCache(androidContext()) }
     single { PrayerTimeCache(androidContext()) }
     single { AdhanPreference(androidContext()) }
     singleOf(::LanguagePreference)
@@ -79,6 +82,7 @@ val appModule = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::QuranViewModel)
+    viewModelOf(::JuzDetailViewModel)
     viewModelOf(::DetailSurahViewModel)
     viewModelOf(::ProfileViewModel)
 

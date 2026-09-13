@@ -15,4 +15,8 @@ object QuranDirection {
             ayahNumber = ayahNumber,
         )
     )
+
+    fun juz(juzNumber: Int) = AppNavigationCommand.Navigate(
+        QuranRoute.JuzDetail(juzNumber = juzNumber)
+    )
 }
