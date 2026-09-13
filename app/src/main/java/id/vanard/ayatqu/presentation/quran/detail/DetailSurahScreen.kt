@@ -53,6 +53,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,6 +68,7 @@ import id.vanard.ayatqu.core.ui.icon.ArrowLeft
 import id.vanard.ayatqu.core.ui.icon.Download
 import id.vanard.ayatqu.core.ui.icon.Pause
 import id.vanard.ayatqu.core.ui.icon.Play
+import id.vanard.ayatqu.presentation.quran.translationFor
 import id.vanard.ayatqu.presentation.quran.detail.contract.DetailSurahEvent
 import id.vanard.ayatqu.presentation.quran.detail.contract.DetailSurahState
 import id.vanard.ayatqu.presentation.quran.detail.contract.OnDetailSurahEvent
@@ -485,8 +487,7 @@ private fun AyahCard(
             Spacer(Modifier.height(6.dp))
         }
 
-        // Translation (English)
-        val translation = ayah.translations["en"].orEmpty()
+        val translation = ayah.translations.translationFor(Locale.current.language)
         if (translation.isNotBlank()) {
             Text(
                 text = translation,

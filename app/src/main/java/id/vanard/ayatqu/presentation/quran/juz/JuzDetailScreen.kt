@@ -64,6 +64,7 @@ import id.vanard.ayatqu.core.ui.theme.AyatQuTheme
 import id.vanard.ayatqu.domain.model.Juz
 import id.vanard.ayatqu.domain.model.JuzVerse
 import id.vanard.ayatqu.domain.model.LastRead
+import id.vanard.ayatqu.presentation.quran.translationFor
 import id.vanard.ayatqu.presentation.quran.juz.contract.JuzDetailEvent
 import id.vanard.ayatqu.presentation.quran.juz.contract.JuzDetailState
 import id.vanard.ayatqu.presentation.quran.juz.contract.OnJuzDetailEvent
@@ -281,7 +282,7 @@ private fun JuzVerses(
     modifier: Modifier = Modifier,
 ) {
     val juz = requireNotNull(state.juz)
-    val translationLanguage = Locale.current.language.takeIf { it == "id" } ?: "en"
+    val translationLanguage = Locale.current.language
     LazyColumn(modifier = modifier.fillMaxSize(), state = listState) {
         state.downloadProgress?.let { (downloaded, total) ->
             item(key = "download_progress") {
@@ -424,8 +425,7 @@ private fun JuzVerseCard(
             )
         }
 
-        val translation = verse.translations[translationLanguage]
-            ?: verse.translations["en"].orEmpty()
+        val translation = verse.translations.translationFor(translationLanguage)
         if (translation.isNotBlank()) {
             Spacer(Modifier.height(8.dp))
             Text(
