@@ -76,18 +76,23 @@ class PrayerTimeRepositoryImpl(
             }
         }
 
-    private fun PrayerTimingsDto.toPrayerTimes(): List<PrayerTime> = listOf(
-        PrayerTime(name = "Fajr", time = fajr.cleanTime()),
-        PrayerTime(name = "Sunrise", time = sunrise.cleanTime()),
-        PrayerTime(name = "Dhuhr", time = dhuhr.cleanTime()),
-        PrayerTime(name = "Asr", time = asr.cleanTime()),
-        PrayerTime(name = "Maghrib", time = maghrib.cleanTime()),
-        PrayerTime(name = "Isha", time = isha.cleanTime()),
-    )
-
-    /**
-     * Strips timezone suffix like " (WIB)" or " +07" from the time string.
-     * E.g. "04:32 (WIB)" → "04:32"
-     */
-    private fun String.cleanTime(): String = substringBefore(" ").trim()
 }
+
+internal fun PrayerTimingsDto.toPrayerTimes(): List<PrayerTime> = buildList {
+    imsak
+        ?.cleanTime()
+        ?.takeIf(String::isNotBlank)
+        ?.let { add(PrayerTime(name = "Imsak", time = it)) }
+    add(PrayerTime(name = "Fajr", time = fajr.cleanTime()))
+    add(PrayerTime(name = "Sunrise", time = sunrise.cleanTime()))
+    add(PrayerTime(name = "Dhuhr", time = dhuhr.cleanTime()))
+    add(PrayerTime(name = "Asr", time = asr.cleanTime()))
+    add(PrayerTime(name = "Maghrib", time = maghrib.cleanTime()))
+    add(PrayerTime(name = "Isha", time = isha.cleanTime()))
+}
+
+/**
+ * Strips timezone suffix like " (WIB)" or " +07" from the time string.
+ * E.g. "04:32 (WIB)" → "04:32"
+ */
+private fun String.cleanTime(): String = substringBefore(" ").trim()

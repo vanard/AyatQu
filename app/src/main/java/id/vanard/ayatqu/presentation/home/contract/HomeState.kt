@@ -9,7 +9,7 @@ data class HomeState(
     val prayerTimes: List<PrayerTime> = emptyList(),
     val isPrayerTimesLoading: Boolean = false,
     val prayerTimesError: String? = null,
-    val timezone: String? = null,
+    val locationName: String? = null,
     val isLocationLoading: Boolean = false,
     val locationError: String? = null,
     val isNetworkAvailable: Boolean = true,

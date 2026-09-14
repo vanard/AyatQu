@@ -44,7 +44,7 @@ class AdhanSchedulerWorker(
 
         for (prayer in prayerTimes) {
             val prayerName = prayer.name
-            if (prayerName == "Sunrise") continue
+            if (prayerName !in ADHAN_PRAYERS) continue
 
             val timeParts = prayer.time.split(":")
             if (timeParts.size != 2) continue
@@ -124,9 +124,7 @@ class AdhanSchedulerWorker(
 
     private fun cancelAllAlarms(context: Context) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
-        val prayers = listOf("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha")
-
-        for (prayer in prayers) {
+        for (prayer in ADHAN_PRAYERS) {
             for (isAdzan in listOf(true, false)) {
                 val intent = Intent(context, AdhanAlarmReceiver::class.java)
                 val pendingIntent = PendingIntent.getBroadcast(
@@ -141,6 +139,8 @@ class AdhanSchedulerWorker(
     }
 
     companion object {
+        private val ADHAN_PRAYERS = setOf("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha")
+
         const val WORK_NAME = "adhan_scheduler"
         const val EXTRA_PRAYER_NAME = "prayer_name"
         const val EXTRA_IS_ADZAN_TIME = "is_adzan_time"

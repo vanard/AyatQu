@@ -91,7 +91,7 @@ fun HomeScreen(
             isLoading = state.isPrayerTimesLoading,
             error = state.prayerTimesError,
             isNetworkAvailable = state.isNetworkAvailable,
-            timezone = state.timezone,
+            locationName = state.locationName,
             locationError = state.locationError,
             isLocationLoading = state.isLocationLoading,
             onRetry = { onEvent(HomeEvent.RetryClicked) },
@@ -223,7 +223,7 @@ private fun PrayerTimesSection(
     isLoading: Boolean,
     error: String?,
     isNetworkAvailable: Boolean,
-    timezone: String? = null,
+    locationName: String? = null,
     locationError: String? = null,
     isLocationLoading: Boolean = false,
     onRetry: () -> Unit,
@@ -248,7 +248,7 @@ private fun PrayerTimesSection(
         )
         Spacer(Modifier.weight(1f))
         Text(
-            text = timezone ?: stringResource(R.string.your_location),
+            text = locationName ?: stringResource(R.string.your_location),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = AyatQuTheme.colors.textMuted,
@@ -455,6 +455,7 @@ private fun IconPlaceholder(size: Int) {
 // ── Previews ──────────────────────────────────────────────────────────────────
 
 private val samplePrayerTimes = listOf(
+    PrayerTime("Imsak", "04:22"),
     PrayerTime("Fajr", "04:32"),
     PrayerTime("Sunrise", "05:58"),
     PrayerTime("Dhuhr", "12:05"),
@@ -476,7 +477,7 @@ private fun PreviewHomeFull() {
                     surahName = "Al-Baqarah",
                 ),
                 prayerTimes = samplePrayerTimes,
-                timezone = "Asia/Jakarta",
+                locationName = "Ubud",
             ),
             onEvent = {},
         )
@@ -496,7 +497,7 @@ private fun PreviewHomeGuest() {
                     surahName = "Al-Fatihah",
                 ),
                 prayerTimes = samplePrayerTimes,
-                timezone = "Asia/Jakarta",
+                locationName = "Ubud",
             ),
             onEvent = {},
         )
@@ -511,7 +512,7 @@ private fun PreviewHomeNoLastRead() {
             state = HomeState(
                 userName = "Abdullah",
                 prayerTimes = samplePrayerTimes,
-                timezone = "Asia/Jakarta",
+                locationName = "Ubud",
             ),
             onEvent = {},
         )
@@ -549,7 +550,7 @@ private fun PreviewHomeLocationError() {
                 userName = "Guest",
                 locationError = "GPS is disabled. Please enable location services.",
                 prayerTimes = samplePrayerTimes,
-                timezone = "Asia/Jakarta",
+                locationName = "Ubud",
             ),
             onEvent = {},
         )

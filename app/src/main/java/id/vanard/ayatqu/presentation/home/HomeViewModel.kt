@@ -79,15 +79,13 @@ class HomeViewModel(
         viewModelScope.launch {
             val cachedTimes = prayerTimeCache.cachedPrayerTimes.first()
             val cachedLocation = prayerTimeCache.getCachedLocation()
-            val cachedTimezone = prayerTimeCache.getCachedTimezone()
 
             if (!cachedTimes.isNullOrEmpty()) {
+                val locationName = resolveLocationName(cachedLocation)
                 setState {
                     copy(
                         prayerTimes = cachedTimes,
-                        timezone = cachedTimezone?.toCityName() ?: cachedLocation?.let { loc ->
-                            "%.2f, %.2f".format(loc.first, loc.second)
-                        },
+                        locationName = locationName,
                     )
                 }
             }
@@ -98,17 +96,15 @@ class HomeViewModel(
         viewModelScope.launch {
             val cachedTimes = prayerTimeCache.cachedPrayerTimes.first()
             val cachedLocation = prayerTimeCache.getCachedLocation()
-            val cachedTimezone = prayerTimeCache.getCachedTimezone()
             val hasCache = !cachedTimes.isNullOrEmpty()
 
             // Show cached data immediately if available (no loading spinner)
             if (hasCache) {
+                val locationName = resolveLocationName(cachedLocation)
                 setState {
                     copy(
                         prayerTimes = cachedTimes,
-                        timezone = cachedTimezone?.toCityName() ?: cachedLocation?.let { loc ->
-                            "%.2f, %.2f".format(loc.first, loc.second)
-                        },
+                        locationName = locationName,
                         locationError = null,
                         prayerTimesError = null,
                     )
@@ -224,11 +220,12 @@ class HomeViewModel(
             latitude = lat,
             longitude = lng,
         ).onSuccess { result ->
+            val locationName = locationHelper.reverseGeocode(application, lat, lng)
             setState {
                 copy(
                     isPrayerTimesLoading = false,
                     prayerTimes = result.prayerTimes,
-                    timezone = result.timezone?.toCityName() ?: "%.2f, %.2f".format(lat, lng),
+                    locationName = locationName,
                 )
             }
             AdhanSchedulerWorker.runNow(application)
@@ -250,14 +247,14 @@ class HomeViewModel(
         }
 
         prayerTimeRepository.getPrayerTimes(
-            city = "Jakarta",
-            country = "Indonesia",
+            city = DEFAULT_CITY,
+            country = DEFAULT_COUNTRY,
         ).onSuccess { result ->
             setState {
                 copy(
                     isPrayerTimesLoading = false,
                     prayerTimes = result.prayerTimes,
-                    timezone = result.timezone?.toCityName(),
+                    locationName = DEFAULT_CITY,
                 )
             }
             AdhanSchedulerWorker.runNow(application)
@@ -285,5 +282,13 @@ class HomeViewModel(
         loadPrayerTimesWithLocation(fetchLocation = fetchLocation)
     }
 
-    private fun String.toCityName(): String =substringAfterLast("/").replace("_", " ")
+    private suspend fun resolveLocationName(location: Pair<Double, Double>?): String =
+        location?.let { (latitude, longitude) ->
+            locationHelper.reverseGeocode(application, latitude, longitude)
+        } ?: DEFAULT_CITY
+
+    private companion object {
+        const val DEFAULT_CITY = "Jakarta"
+        const val DEFAULT_COUNTRY = "Indonesia"
+    }
 }
