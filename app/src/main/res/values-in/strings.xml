@@ -32,6 +32,25 @@
     <string name="no_internet_connection">Tidak ada koneksi internet</string>
     <string name="retry">Coba Lagi</string>
 
+    <!-- Qibla -->
+    <string name="qibla">Arah Kiblat</string>
+    <string name="qibla_direction">Arah</string>
+    <string name="distance_to_kaaba">Jarak ke Ka\'bah</string>
+    <string name="qibla_degrees_value">%1$.1f° %2$s</string>
+    <string name="qibla_distance_value">%1$.1f km</string>
+    <string name="qibla_instruction">Letakkan ponsel secara mendatar dan putar hingga panah emas mengarah ke depan.</string>
+    <string name="current_device_bearing">Arah perangkat saat ini</string>
+    <string name="rotate_phone_left">Putar ponsel %1$d° ke kiri</string>
+    <string name="rotate_phone_right">Putar ponsel %1$d° ke kanan</string>
+    <string name="qibla_aligned">Anda menghadap ke arah Kiblat</string>
+    <string name="qibla_calibrating_compass">Gerakkan ponsel perlahan untuk mengkalibrasi kompas</string>
+    <string name="qibla_true_north_note">Arah menggunakan utara sejati geografis. Pembacaan kompas magnetik disesuaikan dengan lokasi Anda.</string>
+    <string name="qibla_compass_unavailable">Sensor kompas tidak tersedia. Gunakan nilai arah relatif terhadap utara sejati.</string>
+    <string name="qibla_location_permission_required">Izin lokasi diperlukan untuk menghitung arah Kiblat.</string>
+    <string name="qibla_enable_location">Aktifkan layanan lokasi untuk menghitung arah Kiblat.</string>
+    <string name="qibla_location_unavailable">Lokasi Anda tidak dapat ditentukan. Pindah ke area terbuka lalu coba lagi.</string>
+    <string name="couldnt_load_qibla">Tidak dapat memuat arah Kiblat.</string>
+
     <!-- Quran -->
     <string name="al_quran">AL-QURAN</string>
     <string name="tab_surah">Surah</string>

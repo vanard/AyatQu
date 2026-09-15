@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 object QuranRetrofitClient {
 
-    fun create(context: Context): QuranApiService {
+    fun createRetrofit(context: Context): Retrofit {
         // Header interceptor — injects API key
         val authInterceptor = Interceptor { chain ->
             val request = chain.request().newBuilder()
@@ -63,6 +63,5 @@ object QuranRetrofitClient {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(QuranApiService::class.java)
     }
 }

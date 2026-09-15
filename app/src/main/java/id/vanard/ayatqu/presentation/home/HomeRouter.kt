@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.vanard.ayatqu.core.navigation.NavigationManager
 import id.vanard.ayatqu.navigation.directions.QuranDirection
+import id.vanard.ayatqu.navigation.directions.QiblaDirection
 import id.vanard.ayatqu.presentation.home.contract.HomeEvent
 import id.vanard.ayatqu.presentation.home.contract.HomeSideEffect
 import id.vanard.ayatqu.util.LocationHelper
@@ -63,6 +64,7 @@ fun HomeRouter(
                 is HomeSideEffect.NavigateToLastRead -> navigationManager.navigate(
                     QuranDirection.detail(effect.surahNumber, effect.ayahNumber)
                 )
+                HomeSideEffect.NavigateToQibla -> navigationManager.navigate(QiblaDirection.root)
                 is HomeSideEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
             }
         }

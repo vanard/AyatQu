@@ -50,7 +50,7 @@ class HomeViewModel(
             is HomeEvent.LastReadClicked -> setEffect(
                 HomeSideEffect.NavigateToLastRead(event.surahNumber, event.ayahNumber)
             )
-            HomeEvent.QiblaClicked -> setEffect(HomeSideEffect.ShowMessage("Qibla is not available yet"))
+            HomeEvent.QiblaClicked -> setEffect(HomeSideEffect.NavigateToQibla)
         }
     }
 

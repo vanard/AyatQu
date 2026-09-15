@@ -30,6 +30,25 @@
     <string name="no_internet_connection">No internet connection</string>
     <string name="retry">Retry</string>
 
+    <!-- Qibla -->
+    <string name="qibla">Qibla Direction</string>
+    <string name="qibla_direction">Direction</string>
+    <string name="distance_to_kaaba">Distance to Kaaba</string>
+    <string name="qibla_degrees_value">%1$.1f° %2$s</string>
+    <string name="qibla_distance_value">%1$.1f km</string>
+    <string name="qibla_instruction">Lay your phone flat and rotate until the gold arrow points forward.</string>
+    <string name="current_device_bearing">Current device bearing</string>
+    <string name="rotate_phone_left">Rotate the phone %1$d° to the left</string>
+    <string name="rotate_phone_right">Rotate the phone %1$d° to the right</string>
+    <string name="qibla_aligned">You are facing the Qibla</string>
+    <string name="qibla_calibrating_compass">Move the phone gently to calibrate the compass</string>
+    <string name="qibla_true_north_note">The bearing uses geographic true north. Magnetic compass readings are adjusted for your location.</string>
+    <string name="qibla_compass_unavailable">A compass sensor is unavailable. Use the direction value relative to true north.</string>
+    <string name="qibla_location_permission_required">Location permission is required to calculate the Qibla direction.</string>
+    <string name="qibla_enable_location">Enable location services to calculate the Qibla direction.</string>
+    <string name="qibla_location_unavailable">Your location could not be determined. Move to an open area and try again.</string>
+    <string name="couldnt_load_qibla">Couldn\'t load the Qibla direction.</string>
+
     <!-- Quran -->
     <string name="al_quran">AL-QURAN</string>
     <string name="tab_surah">Surah</string>
