@@ -41,6 +41,18 @@ class LocationHelper(context: Context) {
     companion object {
         const val LOCATION_PERMISSION_REQUEST_CODE = 2001
 
+        private val ADMINISTRATIVE_PREFIX = Regex(
+            pattern = "^(?:(?:provinsi|kota administrasi|kota|kabupaten|kecamatan|kelurahan|desa)\\s+)+",
+            option = RegexOption.IGNORE_CASE,
+        )
+
+        /** Removes Indonesian administrative labels while preserving the place name. */
+        fun cleanLocationName(name: String): String {
+            val normalized = name.trim().replace(Regex("\\s+"), " ")
+            val cleaned = normalized.replaceFirst(ADMINISTRATIVE_PREFIX, "").trim()
+            return cleaned.ifEmpty { normalized }
+        }
+
         fun isLocationPermissionGranted(context: Context): Boolean {
             return ContextCompat.checkSelfPermission(
                 context,
@@ -176,11 +188,12 @@ class LocationHelper(context: Context) {
                 }
             }
 
-            address?.locality
+            val locationName = address?.locality
                 ?: address?.subLocality
                 ?: address?.subAdminArea
                 ?: address?.adminArea
                 ?: coordinateFallback
+            cleanLocationName(locationName)
         } catch (_: Exception) {
             coordinateFallback
         }
