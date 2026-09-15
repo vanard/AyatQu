@@ -1,9 +1,6 @@
 package id.vanard.ayatqu.presentation.profile
 
-import android.app.AlarmManager
 import android.app.Application
-import android.app.PendingIntent
-import android.content.Intent
 import androidx.lifecycle.viewModelScope
 import id.vanard.ayatqu.R
 import id.vanard.ayatqu.data.AdhanPreference
@@ -16,7 +13,6 @@ import id.vanard.ayatqu.presentation.common.viewmodel.BaseMviViewModel
 import id.vanard.ayatqu.presentation.profile.contract.ProfileEvent
 import id.vanard.ayatqu.presentation.profile.contract.ProfileSideEffect
 import id.vanard.ayatqu.presentation.profile.contract.ProfileState
-import id.vanard.ayatqu.worker.AdhanAlarmReceiver
 import id.vanard.ayatqu.worker.AdhanSchedulerWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -66,9 +62,39 @@ class ProfileViewModel(
             is ProfileEvent.NotificationPermissionResult -> {
                 if (event.granted) enableNotifications()
             }
-            is ProfileEvent.SoundTypeChanged -> viewModelScope.launch {
-                adhanPreference.setAdhanSoundType(event.type)
+            ProfileEvent.SoundClicked -> setState {
+                copy(showSoundDialog = true, pendingSoundType = null, soundPreviewReady = false)
             }
+            is ProfileEvent.SoundTypeChanged -> {
+                if (event.type in AdhanPreference.soundTypes && uiState.value.showSoundDialog) {
+                    setState { copy(pendingSoundType = event.type, soundPreviewReady = false) }
+                    setEffect(ProfileSideEffect.PreviewSound(event.type))
+                }
+            }
+            is ProfileEvent.SoundPreviewStarted -> setState {
+                if (showSoundDialog && pendingSoundType == event.type) copy(soundPreviewReady = true) else this
+            }
+            is ProfileEvent.SoundPreviewFailed -> {
+                setState { if (pendingSoundType == event.type) copy(soundPreviewReady = false) else this }
+                setEffect(ProfileSideEffect.ShowMessage(application.getString(R.string.sound_preview_failed)))
+            }
+            ProfileEvent.SoundConfirmed -> {
+                val state = uiState.value
+                if (state.showSoundDialog && state.soundPreviewReady) {
+                    state.pendingSoundType?.let { type ->
+                        viewModelScope.launch { adhanPreference.setAdhanSoundType(type) }
+                    }
+                    dismissSound()
+                }
+            }
+            ProfileEvent.SoundDismissed -> dismissSound()
+            is ProfileEvent.PermissionsRefreshed -> setState { copy(remindersReady = event.ready) }
+            ProfileEvent.ReminderSetupClicked -> setState { copy(showReminderSetupDialog = true) }
+            ProfileEvent.ReminderSetupConfirmed -> {
+                setState { copy(showReminderSetupDialog = false) }
+                setEffect(ProfileSideEffect.EnableNotifications)
+            }
+            ProfileEvent.OpenAppSettingsClicked -> setEffect(ProfileSideEffect.OpenAppSettings)
             ProfileEvent.LanguageClicked -> setState { copy(showLanguageDialog = true) }
             is ProfileEvent.LanguageSelected -> selectLanguage(event.code)
             ProfileEvent.LogoutClicked -> setState { copy(showLogoutDialog = true) }
@@ -80,6 +106,7 @@ class ProfileViewModel(
                     showLogoutDialog = false,
                     showClearCacheDialog = false,
                     showLanguageDialog = false,
+                    showReminderSetupDialog = false,
                 )
             }
             ProfileEvent.RateAppClicked -> setEffect(ProfileSideEffect.ShowMessage("Rating is not available yet"))
@@ -89,11 +116,11 @@ class ProfileViewModel(
 
     private fun changeNotifications(enabled: Boolean) {
         if (enabled) {
-            setEffect(ProfileSideEffect.EnableNotifications)
+            setState { copy(showReminderSetupDialog = true) }
         } else {
             viewModelScope.launch {
                 adhanPreference.setNotificationsEnabled(false)
-                cancelScheduledAlarms()
+                AdhanSchedulerWorker.cancel(application)
             }
         }
     }
@@ -103,6 +130,11 @@ class ProfileViewModel(
             adhanPreference.setNotificationsEnabled(true)
             AdhanSchedulerWorker.runNow(application)
         }
+    }
+
+    private fun dismissSound() {
+        setState { copy(showSoundDialog = false, pendingSoundType = null, soundPreviewReady = false) }
+        setEffect(ProfileSideEffect.StopSoundPreview)
     }
 
     private fun selectLanguage(code: String) {
@@ -131,20 +163,4 @@ class ProfileViewModel(
         }
     }
 
-    private fun cancelScheduledAlarms() {
-        val alarmManager = application.getSystemService(AlarmManager::class.java)
-        listOf("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha").forEach { prayer ->
-            listOf(true, false).forEach { isAdhan ->
-                val intent = Intent(application, AdhanAlarmReceiver::class.java)
-                val requestCode = if (isAdhan) prayer.hashCode() else prayer.hashCode() + 10_000
-                val pendingIntent = PendingIntent.getBroadcast(
-                    application,
-                    requestCode,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                )
-                alarmManager.cancel(pendingIntent)
-            }
-        }
-    }
 }

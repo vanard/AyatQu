@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,6 +28,7 @@ import id.vanard.ayatqu.presentation.profile.contract.ProfileSideEffect
 import id.vanard.ayatqu.util.PermissionHelper
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileRouter(
@@ -38,10 +40,17 @@ fun ProfileRouter(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val audio = remember(context) { id.vanard.ayatqu.util.AdhanAudioPlayer(context) }
+    androidx.compose.runtime.DisposableEffect(audio) {
+        onDispose { audio.stop() }
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { audio.stop() }
     var awaitingExactAlarmPermission by rememberSaveable { mutableStateOf(false) }
 
     fun finishNotificationPermission() {
         if (PermissionHelper.canScheduleExactAlarms(context)) {
+            viewModel.onEvent(ProfileEvent.PermissionsRefreshed(true))
             viewModel.onEvent(ProfileEvent.NotificationPermissionResult(granted = true))
         } else {
             awaitingExactAlarmPermission = true
@@ -50,8 +59,10 @@ fun ProfileRouter(
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        val ready = PermissionHelper.isNotificationPermissionGranted(context) && PermissionHelper.canScheduleExactAlarms(context)
+        viewModel.onEvent(ProfileEvent.PermissionsRefreshed(ready))
         if (awaitingExactAlarmPermission) {
-            if (PermissionHelper.canScheduleExactAlarms(context)) {
+            if (ready) {
                 viewModel.onEvent(ProfileEvent.NotificationPermissionResult(granted = true))
             }
             awaitingExactAlarmPermission = false
@@ -62,6 +73,10 @@ fun ProfileRouter(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
         if (granted) finishNotificationPermission()
+        else {
+            viewModel.onEvent(ProfileEvent.PermissionsRefreshed(false))
+            viewModel.onEvent(ProfileEvent.ReminderSetupClicked)
+        }
     }
 
     LaunchedEffect(viewModel) {
@@ -73,16 +88,24 @@ fun ProfileRouter(
                 ProfileSideEffect.EnableNotifications -> {
                     if (PermissionHelper.isNotificationPermissionGranted(context)) {
                         finishNotificationPermission()
-                    } else {
+                    } else if (PermissionHelper.isNotificationPermissionRequired(context)) {
                         notificationPermissionLauncher.launch(
                             PermissionHelper.getNotificationPermission()
                         )
+                    } else {
+                        awaitingExactAlarmPermission = true
+                        PermissionHelper.openAppSettings(context)
                     }
                 }
+                is ProfileSideEffect.PreviewSound -> audio.play(effect.type,
+                    onStarted = { viewModel.onEvent(ProfileEvent.SoundPreviewStarted(effect.type)) },
+                    onError = { viewModel.onEvent(ProfileEvent.SoundPreviewFailed(effect.type)) })
+                ProfileSideEffect.StopSoundPreview -> audio.stop()
+                ProfileSideEffect.OpenAppSettings -> PermissionHelper.openAppSettings(context)
                 is ProfileSideEffect.ApplyLanguage -> {
                     languagePreference.setLanguage(effect.languageCode)
                 }
-                is ProfileSideEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+                is ProfileSideEffect.ShowMessage -> scope.launch { snackbarHostState.showSnackbar(effect.message) }
             }
         }
     }

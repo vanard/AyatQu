@@ -26,22 +26,14 @@ import id.vanard.ayatqu.core.ui.icon.SignOut
 import id.vanard.ayatqu.core.ui.icon.Star
 import id.vanard.ayatqu.core.ui.icon.Trash
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +55,6 @@ import id.vanard.ayatqu.presentation.profile.contract.ProfileState
 
 // ── Main composable ───────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     state: ProfileState,
@@ -95,7 +86,7 @@ fun ProfileScreen(
             icon = Bell,
             title = stringResource(R.string.notifications),
             subtitle = stringResource(R.string.daily_prayer_reminders),
-            checked = state.notificationsEnabled,
+            checked = state.notificationsEnabled && state.remindersReady,
             onCheckedChange = { onEvent(ProfileEvent.NotificationsChanged(it)) },
             enabled = true,
         )
@@ -103,11 +94,20 @@ fun ProfileScreen(
         if (state.notificationsEnabled) {
             MenuDivider()
 
-            SoundTypeSelector(
-                soundType = state.adhanSoundType,
-                onSoundTypeChange = { onEvent(ProfileEvent.SoundTypeChanged(it)) },
+            MenuNavigationItem(
+                icon = Bell,
+                title = stringResource(R.string.adhan_sound),
+                subtitle = AdhanPreference.getDisplayName(state.adhanSoundType),
+                onClick = { onEvent(ProfileEvent.SoundClicked) },
             )
         }
+
+        MenuNavigationItem(
+            icon = Info,
+            title = stringResource(R.string.reminder_setup),
+            subtitle = stringResource(if (state.remindersReady) R.string.reminders_ready else R.string.reminders_need_permission),
+            onClick = { onEvent(ProfileEvent.ReminderSetupClicked) },
+        )
 
         MenuDivider()
 
@@ -164,6 +164,31 @@ fun ProfileScreen(
         }
 
         Spacer(Modifier.height(32.dp))
+    }
+
+    if (state.showSoundDialog) SoundSelectionDialog(state, onEvent)
+
+    if (state.showReminderSetupDialog) {
+        AlertDialog(
+            onDismissRequest = { onEvent(ProfileEvent.DialogDismissed) },
+            title = { Text(stringResource(R.string.reminder_setup)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.reminder_setup_description))
+                    TextButton(onClick = { onEvent(ProfileEvent.OpenAppSettingsClicked) }) {
+                        Text(stringResource(R.string.open_app_settings))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onEvent(ProfileEvent.ReminderSetupConfirmed) }) {
+                    Text(stringResource(R.string.continue_button))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(ProfileEvent.DialogDismissed) }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
     }
 
     if (state.showLogoutDialog) {
@@ -651,83 +676,42 @@ private fun MenuDivider() {
 
 // ── Sound type selector ──────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SoundTypeSelector(
-    soundType: String,
-    onSoundTypeChange: (String) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    val options = listOf(
-        AdhanPreference.SOUND_TYPE_DEFAULT to AdhanPreference.getDisplayName(AdhanPreference.SOUND_TYPE_DEFAULT),
-        AdhanPreference.SOUND_TYPE_SUBUH to AdhanPreference.getDisplayName(AdhanPreference.SOUND_TYPE_SUBUH),
-        AdhanPreference.SOUND_TYPE_OMAR_HISHAM to AdhanPreference.getDisplayName(AdhanPreference.SOUND_TYPE_OMAR_HISHAM),
-        AdhanPreference.SOUND_TYPE_MAGHRIB_MTA to AdhanPreference.getDisplayName(AdhanPreference.SOUND_TYPE_MAGHRIB_MTA),
-        AdhanPreference.SOUND_TYPE_SILENT to AdhanPreference.getDisplayName(AdhanPreference.SOUND_TYPE_SILENT),
-    )
-    val currentLabel = AdhanPreference.getDisplayName(soundType)
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                .clickable { expanded = true }
-                .padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Bell,
-                contentDescription = "Adhan Sound",
-                tint = AyatQuTheme.colors.primary,
-                modifier = Modifier.size(24.dp),
-            )
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.adhan_sound),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = currentLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AyatQuTheme.colors.textMuted,
-                )
-            }
-            Icon(
-                imageVector = CaretRight,
-                contentDescription = null,
-                tint = AyatQuTheme.colors.textMuted,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            options.forEach { (type, label) ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = label,
-                            color = if (type == soundType) AyatQuTheme.colors.primary
-                                    else MaterialTheme.colorScheme.onBackground,
+private fun SoundSelectionDialog(state: ProfileState, onEvent: OnProfileEvent) {
+    AlertDialog(
+        onDismissRequest = { onEvent(ProfileEvent.SoundDismissed) },
+        title = { Text(stringResource(R.string.adhan_sound)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(stringResource(R.string.sound_preview_hint))
+                AdhanPreference.soundTypes.forEach { type ->
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clickable { onEvent(ProfileEvent.SoundTypeChanged(type)) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        androidx.compose.material3.RadioButton(
+                            selected = state.pendingSoundType == type,
+                            onClick = null,
                         )
-                    },
-                    onClick = {
-                        onSoundTypeChange(type)
-                        expanded = false
-                    },
-                )
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (type == AdhanPreference.SOUND_TYPE_SILENT) stringResource(R.string.silent)
+                            else AdhanPreference.getDisplayName(type))
+                    }
+                }
             }
-        }
-    }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = state.pendingSoundType != null && state.soundPreviewReady,
+                onClick = { onEvent(ProfileEvent.SoundConfirmed) },
+            ) { Text(stringResource(R.string.ok)) }
+        },
+        dismissButton = {
+            TextButton(onClick = { onEvent(ProfileEvent.SoundDismissed) }) { Text(stringResource(R.string.cancel)) }
+        },
+    )
 }
 
 // ── Previews ──────────────────────────────────────────────────────────────────

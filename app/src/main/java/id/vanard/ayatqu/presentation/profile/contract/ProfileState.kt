@@ -13,4 +13,9 @@ data class ProfileState(
     val showLogoutDialog: Boolean = false,
     val showClearCacheDialog: Boolean = false,
     val showLanguageDialog: Boolean = false,
+    val showSoundDialog: Boolean = false,
+    val pendingSoundType: String? = null,
+    val soundPreviewReady: Boolean = false,
+    val remindersReady: Boolean = false,
+    val showReminderSetupDialog: Boolean = false,
 )
