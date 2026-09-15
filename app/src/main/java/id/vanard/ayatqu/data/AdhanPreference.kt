@@ -18,7 +18,7 @@ class AdhanPreference(private val context: Context) {
         .map { prefs -> prefs[notificationsEnabledKey] != "false" }
 
     val adhanSoundType: Flow<String> = dataStore.data
-        .map { prefs -> prefs[adhanSoundTypeKey] ?: SOUND_TYPE_DEFAULT }
+        .map { prefs -> normalizeSoundType(prefs[adhanSoundTypeKey]) }
 
     suspend fun setNotificationsEnabled(enabled: Boolean) {
         dataStore.edit { prefs ->
@@ -28,35 +28,39 @@ class AdhanPreference(private val context: Context) {
 
     suspend fun setAdhanSoundType(type: String) {
         dataStore.edit { prefs ->
-            prefs[adhanSoundTypeKey] = type
+            prefs[adhanSoundTypeKey] = normalizeSoundType(type)
         }
     }
 
     companion object {
-        const val SOUND_TYPE_DEFAULT = "adzan_default"
         const val SOUND_TYPE_SUBUH = "adzan_subuh"
         const val SOUND_TYPE_OMAR_HISHAM = "adhan_omar_hisham"
+        const val SOUND_TYPE_DEFAULT = SOUND_TYPE_OMAR_HISHAM
         const val SOUND_TYPE_MAGHRIB_MTA = "adhan_maghrib_mta"
         const val SOUND_TYPE_SILENT = "silent"
+        val soundTypes = listOf(SOUND_TYPE_DEFAULT, SOUND_TYPE_SUBUH,
+            SOUND_TYPE_MAGHRIB_MTA, SOUND_TYPE_SILENT)
+
+        // Saved values for the removed default recording resolve to Omar Hisham too.
+        fun normalizeSoundType(type: String?): String =
+            type?.takeIf { it in soundTypes } ?: SOUND_TYPE_DEFAULT
 
         fun getRawResId(soundType: String): Int {
             return when (soundType) {
-                SOUND_TYPE_DEFAULT -> R.raw.adzan_default
                 SOUND_TYPE_SUBUH -> R.raw.adzan_subuh
                 SOUND_TYPE_OMAR_HISHAM -> R.raw.adhan_omar_hisham
                 SOUND_TYPE_MAGHRIB_MTA -> R.raw.adhan_maghrib_mta
-                else -> R.raw.adzan_default
+                else -> R.raw.adhan_omar_hisham
             }
         }
 
         fun getDisplayName(soundType: String): String {
             return when (soundType) {
-                SOUND_TYPE_DEFAULT -> "Adhan (Default)"
                 SOUND_TYPE_SUBUH -> "Subuh - Ust. Ruhani"
                 SOUND_TYPE_OMAR_HISHAM -> "Omar Hisham Al Arabi"
                 SOUND_TYPE_MAGHRIB_MTA -> "Maghrib - MTA"
                 SOUND_TYPE_SILENT -> "Silent"
-                else -> "Adhan (Default)"
+                else -> "Omar Hisham Al Arabi"
             }
         }
     }

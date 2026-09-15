@@ -34,27 +34,41 @@ fun HomeRouter(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            if (PermissionHelper.canScheduleExactAlarms(context)) AdhanSchedulerWorker.runNow(context)
+            else PermissionHelper.openExactAlarmSettings(context)
+        }
+    }
+
+    fun requestNotificationPermission() {
+        if (PermissionHelper.isNotificationPermissionRequired(context) &&
+            !PermissionHelper.isNotificationPermissionGranted(context)) {
+            notificationPermissionLauncher.launch(PermissionHelper.getNotificationPermission())
+        }
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         viewModel.onEvent(HomeEvent.LoadPrayerTimes(permissions.values.any { it }))
+        requestNotificationPermission()
     }
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        if (granted) AdhanSchedulerWorker.runNow(context)
+
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        if (PermissionHelper.isNotificationPermissionGranted(context) && PermissionHelper.canScheduleExactAlarms(context)) {
+            AdhanSchedulerWorker.runNow(context)
+        }
     }
 
     LaunchedEffect(Unit) {
         if (LocationHelper.isLocationPermissionGranted(context)) {
             viewModel.onEvent(HomeEvent.LoadPrayerTimes(fetchLocation = true))
+            requestNotificationPermission()
         } else {
             locationPermissionLauncher.launch(LocationHelper.getLocationPermissions())
-        }
-        if (PermissionHelper.isNotificationPermissionRequired(context) &&
-            !PermissionHelper.isNotificationPermissionGranted(context)
-        ) {
-            notificationPermissionLauncher.launch(PermissionHelper.getNotificationPermission())
         }
     }
 

@@ -138,6 +138,20 @@
     <string name="sign_in">Masuk</string>
     <string name="create_account">Buat Akun</string>
     <string name="adhan_sound">Suara Adzan</string>
+    <string name="ok">OK</string>
+    <string name="silent">Senyap</string>
+    <string name="sound_preview_hint">Ketuk suara untuk mendengarkan pratinjau, lalu ketuk OK untuk menyimpan. Senyap menonaktifkan audio adzan.</string>
+    <string name="sound_preview_failed">Tidak dapat memutar pratinjau suara. Silakan coba lagi.</string>
+    <string name="prayer_reminder">Pengingat sholat</string>
+    <string name="reminder_channel_description">Pengingat 15 menit sebelum waktu sholat</string>
+    <string name="prayer_in_15_minutes">Waktu sholat %1$s dalam 15 menit</string>
+    <string name="prayer_time_now">Sudah masuk waktu sholat %1$s</string>
+    <string name="stop_adhan">Hentikan adzan</string>
+    <string name="reminder_setup">Pengaturan pengingat sholat</string>
+    <string name="reminders_ready">Izin diberikan · pemulihan setelah restart aktif</string>
+    <string name="reminders_need_permission">Izinkan notifikasi dan alarm agar pengingat tepat waktu</string>
+    <string name="open_app_settings">Buka pengaturan aplikasi</string>
+    <string name="reminder_setup_description">Izinkan notifikasi serta Alarm &amp; pengingat untuk menerima pengingat 15 menit sebelum sholat dan mendengar adzan pilihan Anda saat waktu sholat tiba.\n\nPengingat dipulihkan setelah perangkat dinyalakan ulang dan dibuka kuncinya. AyatQu menggunakan alarm terjadwal dan pembaruan harian untuk menghemat baterai.\n\nBeberapa ponsel memiliki pengaturan Mulai otomatis atau Izinkan aktivitas latar belakang. Jika pengingat tidak muncul setelah restart, periksa pengaturan AyatQu di ponsel.\n\nPerbarui lokasi sholat dan hubungkan ke internet secara berkala untuk memperbarui jadwal tujuh hari berikutnya. Mode Jangan Ganggu dan Senyap tetap dihormati.</string>
     <string name="cache_cleared">Cache berhasil dihapus</string>
 
     <!-- Auth -->

@@ -37,6 +37,8 @@ class PrayerTimeRepositoryImpl(
                 cache.savePrayerTimes(
                     prayerTimes = prayerTimes,
                     timezone = timezone,
+                    city = city,
+                    country = country,
                 )
 
                 PrayerTimesResult(prayerTimes, timezone)

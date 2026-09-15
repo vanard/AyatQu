@@ -27,6 +27,7 @@ object PermissionHelper {
      * Returns true if not required (Android 12 and below) or if granted.
      */
     fun isNotificationPermissionGranted(context: Context): Boolean {
+        if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
         if (!isNotificationPermissionRequired(context)) return true
         return ContextCompat.checkSelfPermission(
             context,
@@ -54,9 +55,15 @@ object PermissionHelper {
     fun openExactAlarmSettings(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                data = android.net.Uri.parse("package:${context.packageName}")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-            context.startActivity(intent)
+            runCatching { context.startActivity(intent) }.onFailure { openAppSettings(context) }
         }
+    }
+
+    fun openAppSettings(context: Context) {
+        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            android.net.Uri.parse("package:${context.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }

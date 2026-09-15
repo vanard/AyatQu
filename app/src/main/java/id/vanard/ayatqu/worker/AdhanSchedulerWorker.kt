@@ -4,176 +4,157 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
+import androidx.work.*
 import id.vanard.ayatqu.data.AdhanPreference
+import id.vanard.ayatqu.data.AdhanScheduleCache
 import id.vanard.ayatqu.data.PrayerTimeCache
+import id.vanard.ayatqu.data.remote.PrayerTimeApiService
+import id.vanard.ayatqu.data.repository.toPrayerTimes
+import id.vanard.ayatqu.domain.model.AdhanAlarmPlan
+import id.vanard.ayatqu.domain.model.AdhanDay
+import id.vanard.ayatqu.util.PermissionHelper
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
-import java.time.Duration
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 class AdhanSchedulerWorker(
     appContext: Context,
     params: WorkerParameters,
+    private val preferences: AdhanPreference,
+    private val cache: PrayerTimeCache,
+    private val scheduleCache: AdhanScheduleCache,
+    private val api: PrayerTimeApiService,
 ) : CoroutineWorker(appContext, params) {
-
-    override suspend fun doWork(): Result {
-        val preferences = AdhanPreference(applicationContext)
-        val cache = PrayerTimeCache(applicationContext)
-
-        val notificationsEnabled = preferences.notificationsEnabled.first()
-        if (!notificationsEnabled) {
+    override suspend fun doWork(): Result = mutex.withLock {
+        if (!preferences.notificationsEnabled.first()) {
             cancelAllAlarms(applicationContext)
-            return Result.success()
+            WorkManager.getInstance(applicationContext).cancelUniqueWork(WORK_NAME)
+            return@withLock Result.success()
         }
-
-        val prayerTimes = cache.cachedPrayerTimes.first()
-        if (prayerTimes.isNullOrEmpty()) return Result.success()
-
-        val soundType = preferences.adhanSoundType.first()
-        val now = LocalDateTime.now()
-        val today = LocalDate.now()
-
-        for (prayer in prayerTimes) {
-            val prayerName = prayer.name
-            if (prayerName !in ADHAN_PRAYERS) continue
-
-            val timeParts = prayer.time.split(":")
-            if (timeParts.size != 2) continue
-            val hour = timeParts[0].toIntOrNull() ?: continue
-            val minute = timeParts[1].toIntOrNull() ?: continue
-
-            val prayerDateTime = LocalDateTime.of(today, LocalTime.of(hour, minute))
-
-            // Schedule 5-minute-before alarm
-            val preAdhanTime = prayerDateTime.minusMinutes(5)
-            if (preAdhanTime.isAfter(now)) {
-                scheduleAlarm(
-                    context = applicationContext,
-                    triggerAt = preAdhanTime,
-                    prayerName = prayerName,
-                    isAdzanTime = false,
-                    requestCode = getRequestCode(prayerName, isAdzanTime = false),
-                )
-            }
-
-            // Schedule adzan-time alarm
-            if (prayerDateTime.isAfter(now)) {
-                scheduleAlarm(
-                    context = applicationContext,
-                    triggerAt = prayerDateTime,
-                    prayerName = prayerName,
-                    isAdzanTime = true,
-                    requestCode = getRequestCode(prayerName, isAdzanTime = true),
-                )
+        if (!PermissionHelper.isNotificationPermissionGranted(applicationContext) ||
+            !PermissionHelper.canScheduleExactAlarms(applicationContext)) {
+            cancelAllAlarms(applicationContext)
+            return@withLock Result.success()
+        }
+        val zone = runCatching { ZoneId.of(cache.getCachedTimezone()) }.getOrDefault(ZoneId.systemDefault())
+        val today = LocalDate.now(zone)
+        val location = cache.getCachedLocation()
+        val city = cache.getCachedCity()
+        val locationKey = "${location ?: city}|$zone"
+        val days = scheduleCache.read(locationKey).filter {
+            it.date >= today.toString() && it.date <= today.plusDays(6).toString()
+        }.associateBy { it.date }.toMutableMap()
+        // Restore saved alarms before network work, including immediately after reboot.
+        if (cache.isCacheValid()) {
+            cache.cachedPrayerTimes.first()?.takeIf { it.isNotEmpty() }?.let {
+                days[today.toString()] = AdhanDay(today.toString(), zone.id, it)
             }
         }
-
-        return Result.success()
+        cancelAllAlarms(applicationContext)
+        arm(days.values.toList())
+        var failed = false
+        if (location != null || city != null) {
+            for (offset in 0L..6L) {
+                val date = today.plusDays(offset)
+                if (days.containsKey(date.toString())) continue
+                try {
+                    val formattedDate = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy", java.util.Locale.ROOT))
+                    val response = if (location != null) {
+                        api.getPrayerTimesByCoordinates(date = formattedDate,
+                            latitude = location.first, longitude = location.second)
+                    } else {
+                        api.getPrayerTimesByCity(date = formattedDate, city = city!!.first, country = city.second)
+                    }
+                    days[date.toString()] = AdhanDay(
+                        date.toString(), response.data.meta?.timezone ?: zone.id,
+                        response.data.timings.toPrayerTimes(),
+                    )
+                    scheduleCache.save(locationKey, days.values.toList())
+                    arm(listOf(days.getValue(date.toString())))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    failed = true
+                    break
+                }
+            }
+        }
+        scheduleCache.save(locationKey, days.values.toList())
+        if (!preferences.notificationsEnabled.first()) cancelAllAlarms(applicationContext)
+        if (failed && runAttemptCount < 3) Result.retry() else Result.success()
     }
 
-    private fun scheduleAlarm(
-        context: Context,
-        triggerAt: LocalDateTime,
-        prayerName: String,
-        isAdzanTime: Boolean,
-        requestCode: Int,
-    ) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-
-        val intent = Intent(context, AdhanAlarmReceiver::class.java).apply {
-            putExtra(EXTRA_PRAYER_NAME, prayerName)
-            putExtra(EXTRA_IS_ADZAN_TIME, isAdzanTime)
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
-        val triggerMillis = triggerAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    pendingIntent,
-                )
-            } else {
-                // Fallback to inexact alarm if exact alarm permission not granted
-                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerMillis, pendingIntent)
+    private suspend fun arm(days: List<AdhanDay>) {
+        if (!preferences.notificationsEnabled.first()) return
+        val manager = applicationContext.getSystemService(AlarmManager::class.java)
+        for (alarm in AdhanAlarmPlan.upcoming(days, Instant.now())) {
+            val intent = Intent(applicationContext, AdhanAlarmReceiver::class.java).apply {
+                putExtra(EXTRA_PRAYER_NAME, alarm.prayer)
+                putExtra(EXTRA_IS_ADZAN_TIME, alarm.atPrayerTime)
+                putExtra(EXTRA_TRIGGER_MILLIS, alarm.triggerMillis)
             }
-        } else {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerMillis,
-                pendingIntent,
-            )
-        }
-    }
-
-    private fun cancelAllAlarms(context: Context) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-        for (prayer in ADHAN_PRAYERS) {
-            for (isAdzan in listOf(true, false)) {
-                val intent = Intent(context, AdhanAlarmReceiver::class.java)
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    getRequestCode(prayer, isAdzan),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                )
-                alarmManager.cancel(pendingIntent)
+            try {
+                manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarm.triggerMillis,
+                    PendingIntent.getBroadcast(applicationContext, alarm.requestCode, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+            } catch (_: SecurityException) {
+                return // Permission was revoked while this worker was running.
             }
         }
     }
 
     companion object {
-        private val ADHAN_PRAYERS = setOf("Fajr", "Dhuhr", "Asr", "Maghrib", "Isha")
-
+        private val mutex = Mutex()
         const val WORK_NAME = "adhan_scheduler"
+        private const val IMMEDIATE_WORK_NAME = "adhan_scheduler_now"
         const val EXTRA_PRAYER_NAME = "prayer_name"
         const val EXTRA_IS_ADZAN_TIME = "is_adzan_time"
+        const val EXTRA_TRIGGER_MILLIS = "trigger_millis"
 
-        private fun getRequestCode(prayerName: String, isAdzanTime: Boolean): Int {
-            val base = prayerName.hashCode()
-            return if (isAdzanTime) base else base + 10000
+        fun cancelAllAlarms(context: Context) {
+            val manager = context.getSystemService(AlarmManager::class.java)
+            // The +30000 request codes clean up snoozes created by older app versions.
+            val legacyCodes = AdhanAlarmPlan.prayers.flatMap {
+                listOf(it.hashCode(), it.hashCode() + 10000, it.hashCode() + 30000)
+            }
+            for (code in AdhanAlarmPlan.requestCodes + legacyCodes) {
+                val pending = PendingIntent.getBroadcast(context, code,
+                    Intent(context, AdhanAlarmReceiver::class.java),
+                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE) ?: continue
+                manager.cancel(pending)
+                pending.cancel()
+            }
         }
 
         fun enqueue(context: Context) {
-            val request = PeriodicWorkRequestBuilder<AdhanSchedulerWorker>(
-                repeatInterval = 24,
-                repeatIntervalTimeUnit = TimeUnit.HOURS,
-            ).build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
-                request,
-            )
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                PeriodicWorkRequestBuilder<AdhanSchedulerWorker>(24, TimeUnit.HOURS)
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.MINUTES).build())
         }
 
         fun runNow(context: Context) {
-            val request = PeriodicWorkRequestBuilder<AdhanSchedulerWorker>(
-                repeatInterval = 24,
-                repeatIntervalTimeUnit = TimeUnit.HOURS,
-            ).build()
+            enqueue(context)
+            WorkManager.getInstance(context).enqueueUniqueWork(IMMEDIATE_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<AdhanSchedulerWorker>()
+                    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.MINUTES).build())
+        }
 
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request,
-            )
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+            WorkManager.getInstance(context).cancelUniqueWork(IMMEDIATE_WORK_NAME)
+            cancelAllAlarms(context)
+            context.stopService(Intent(context, id.vanard.ayatqu.service.AdhanPlaybackService::class.java))
+            val notifications = context.getSystemService(android.app.NotificationManager::class.java)
+            notifications.cancel(id.vanard.ayatqu.util.NotificationHelper.NOTIFICATION_ID_ADHAN)
+            AdhanAlarmPlan.prayers.forEach { notifications.cancel(21001 + it.hashCode()) }
         }
     }
 }

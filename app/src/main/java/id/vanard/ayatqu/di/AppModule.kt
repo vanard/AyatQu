@@ -2,6 +2,7 @@ package id.vanard.ayatqu.di
 
 import com.google.firebase.auth.FirebaseAuth
 import id.vanard.ayatqu.data.AdhanPreference
+import id.vanard.ayatqu.data.AdhanScheduleCache
 import id.vanard.ayatqu.data.LastReadPreference
 import id.vanard.ayatqu.data.LanguagePreference
 import id.vanard.ayatqu.data.OnboardingPreference
@@ -59,6 +60,7 @@ val appModule = module {
     single { JuzLocalCache(androidContext()) }
     single { PrayerTimeCache(androidContext()) }
     single { AdhanPreference(androidContext()) }
+    single { AdhanScheduleCache(androidContext()) }
     single { LanguagePreference(androidContext()) }
 
     // Firebase

@@ -1,6 +1,6 @@
 package id.vanard.ayatqu.util
 
-import android.app.AlarmManager
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -9,146 +9,69 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import id.vanard.ayatqu.MainActivity
 import id.vanard.ayatqu.R
-import id.vanard.ayatqu.data.AdhanPreference
-import id.vanard.ayatqu.worker.SnoozeReceiver
-import java.time.LocalDateTime
-import java.time.ZoneId
+import id.vanard.ayatqu.service.AdhanPlaybackService
 
 object NotificationHelper {
-
-    const val CHANNEL_PRE_ADHAN = "adhan_pre_channel"
-    const val CHANNEL_ADHAN = "adhan_channel"
-
-    const val NOTIFICATION_ID_PRE_ADHAN = 2001
-    const val NOTIFICATION_ID_ADHAN = 2002
-
+    // Channel settings cannot be changed after creation, so v2 replaces the old
+    // audible reminder channel for users upgrading the app.
+    const val CHANNEL_PRE_ADHAN = "adhan_pre_silent_v2"
+    // A new silent channel prevents the old channel's sound playing over the chosen adzan.
+    const val CHANNEL_ADHAN = "adhan_playback_v2"
+    const val NOTIFICATION_ID_ADHAN = 22002
     const val EXTRA_PRAYER_NAME = "prayer_name"
     const val EXTRA_SOUND_TYPE = "sound_type"
 
     fun createNotificationChannels(context: Context) {
-        val manager = context.getSystemService(NotificationManager::class.java)
-
-        val preAdhanChannel = NotificationChannel(
-            CHANNEL_PRE_ADHAN,
-            "Adhan Reminder",
-            NotificationManager.IMPORTANCE_DEFAULT,
-        ).apply {
-            description = "Heads-up reminder 5 minutes before prayer time"
-            enableVibration(true)
-        }
-
-        val adhanChannel = NotificationChannel(
-            CHANNEL_ADHAN,
-            "Adhan",
-            NotificationManager.IMPORTANCE_HIGH,
-        ).apply {
-            description = "Notification when it's time for prayer"
-            enableVibration(true)
-        }
-
-        manager.createNotificationChannels(listOf(preAdhanChannel, adhanChannel))
+        context.getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(
+            NotificationChannel(CHANNEL_PRE_ADHAN, context.getString(R.string.prayer_reminder),
+                NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = context.getString(R.string.reminder_channel_description)
+                setSound(null, null)
+                enableVibration(false)
+            },
+            NotificationChannel(CHANNEL_ADHAN, context.getString(R.string.adhan_sound),
+                NotificationManager.IMPORTANCE_HIGH).apply {
+                setSound(null, null)
+                enableVibration(false)
+            },
+        ))
     }
+
+    private fun openApp(context: Context) = PendingIntent.getActivity(context, 2002,
+        Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
     fun showPreAdhanNotification(context: Context, prayerName: String) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            prayerName.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
+        if (!PermissionHelper.isNotificationPermissionGranted(context)) return
         val notification = NotificationCompat.Builder(context, CHANNEL_PRE_ADHAN)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Prayer Reminder")
-            .setContentText("Prayer time in 5 minutes: $prayerName")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .build()
-
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.notify(NOTIFICATION_ID_PRE_ADHAN + prayerName.hashCode(), notification)
+            .setSmallIcon(R.drawable.home_05_stroke_rounded)
+            .setContentTitle(context.getString(R.string.prayer_reminder))
+            .setContentText(context.getString(R.string.prayer_in_15_minutes, prayerName))
+            .setContentIntent(openApp(context)).setSilent(true).setAutoCancel(true).build()
+        context.getSystemService(NotificationManager::class.java).notify(21001 + prayerName.hashCode(), notification)
     }
 
-    fun showAdhanNotification(
-        context: Context,
-        prayerName: String,
-        soundType: String,
-    ) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            prayerName.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
-        val snoozeIntent = Intent(context, SnoozeReceiver::class.java).apply {
-            putExtra(EXTRA_PRAYER_NAME, prayerName)
-            putExtra(EXTRA_SOUND_TYPE, soundType)
-        }
-        val snoozePendingIntent = PendingIntent.getBroadcast(
-            context,
-            prayerName.hashCode() + 20000,
-            snoozeIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
+    fun adhanNotification(context: Context, prayerName: String, playing: Boolean): Notification {
         val builder = NotificationCompat.Builder(context, CHANNEL_ADHAN)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Adhan")
-            .setContentText("It's time for $prayerName prayer")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .addAction(R.drawable.ic_launcher_foreground, "Snooze 5 min", snoozePendingIntent)
-
-        when (soundType) {
-            AdhanPreference.SOUND_TYPE_SILENT -> {
-                builder.setSilent(true)
-            }
-            else -> {
-                val uri = android.net.Uri.parse(
-                    "android.resource://${context.packageName}/${AdhanPreference.getRawResId(soundType)}"
-                )
-                builder.setSound(uri)
-            }
+            .setSmallIcon(R.drawable.home_05_stroke_rounded)
+            .setContentTitle(context.getString(R.string.adhan_sound))
+            .setContentText(context.getString(R.string.prayer_time_now, prayerName))
+            .setContentIntent(openApp(context)).setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setOngoing(playing).setAutoCancel(!playing)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+        if (playing) {
+            val stop = PendingIntent.getService(context, 2003,
+                Intent(context, AdhanPlaybackService::class.java).setAction(AdhanPlaybackService.ACTION_STOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            builder.addAction(0, context.getString(R.string.stop_adhan), stop)
         }
-
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.notify(NOTIFICATION_ID_ADHAN + prayerName.hashCode(), builder.build())
+        return builder.build()
     }
 
-    fun scheduleSnoozeAlarm(
-        context: Context,
-        prayerName: String,
-        soundType: String,
-        snoozeMinutes: Long = 5,
-    ) {
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-        val triggerAt = LocalDateTime.now().plusMinutes(snoozeMinutes)
-        val triggerMillis = triggerAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        val intent = Intent(context, id.vanard.ayatqu.worker.AdhanAlarmReceiver::class.java).apply {
-            putExtra(id.vanard.ayatqu.worker.AdhanSchedulerWorker.EXTRA_PRAYER_NAME, prayerName)
-            putExtra(id.vanard.ayatqu.worker.AdhanSchedulerWorker.EXTRA_IS_ADZAN_TIME, true)
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            prayerName.hashCode() + 30000,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerMillis,
-            pendingIntent,
-        )
+    fun showAdhanNotification(context: Context, prayerName: String) {
+        if (!PermissionHelper.isNotificationPermissionGranted(context)) return
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.cancel(21001 + prayerName.hashCode())
+        manager.notify(NOTIFICATION_ID_ADHAN, adhanNotification(context, prayerName, false))
     }
 }
